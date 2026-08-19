@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = [".", "xtask"]
+
+[package]
+name = "sunder"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+authors = ["Sunder"]
+license = "MIT"
+description = "Virtual analog CLAP synthesizer for Bitwig"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", default-features = false, features = ["assert_process_allocs"] }
+nih_plug_egui = { git = "https://github.com/robbert-vdh/nih-plug.git" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+lto = "thin"
+strip = "symbols"
