@@ -123,7 +123,13 @@ impl Plugin for Sunder {
                         velocity,
                         ..
                     } => {
-                        self.engine.note_on(note, channel, velocity, sr);
+                        self.engine.note_on(
+                            note,
+                            channel,
+                            velocity,
+                            sr,
+                            self.params.legato.value(),
+                        );
                     }
                     NoteEvent::NoteOff { note, channel, .. } => {
                         self.engine.note_off(note, channel);
@@ -140,7 +146,7 @@ impl Plugin for Sunder {
             if self.lfo_phase >= 1.0 {
                 self.lfo_phase -= 1.0;
             }
-            let lfo = (self.lfo_phase * std::f32::consts::TAU).sin() * self.params.lfo_amt.smoothed.next();
+            let lfo = (self.lfo_phase * std::f32::consts::TAU).sin();
 
             let vp = VoiceParams {
                 osc1_wave: self.params.osc1_wave.value().to_wave(),
@@ -155,16 +161,20 @@ impl Plugin for Sunder {
                 osc2_mix: self.params.osc2_mix.smoothed.next(),
                 osc2_oct: self.params.osc2_oct.value(),
                 osc2_semi: self.params.osc2_semi.value(),
+                osc2_cents: self.params.osc2_cents.smoothed.next(),
                 osc2_pwm: self.params.osc2_pwm.smoothed.next(),
                 sync: self.params.sync.value(),
                 sub_mix: self.params.sub_mix.smoothed.next(),
                 sub_square: self.params.sub_square.value(),
                 noise: self.params.noise.smoothed.next(),
+                noise_kind: self.params.noise_type.value().to_kind(),
                 cutoff: self.params.cutoff.smoothed.next(),
                 res: self.params.res.smoothed.next(),
                 drive: self.params.drive.smoothed.next(),
                 filt_env: self.params.filt_env.value(),
                 keytrack: self.params.keytrack.smoothed.next(),
+                filt_mode: self.params.filt_mode.value().to_mode(),
+                four_pole: self.params.four_pole.value(),
                 amp_a: self.params.amp_a.value(),
                 amp_d: self.params.amp_d.value(),
                 amp_s: self.params.amp_s.smoothed.next(),
@@ -174,6 +184,9 @@ impl Plugin for Sunder {
                 filt_s: self.params.filt_s.smoothed.next(),
                 filt_r: self.params.filt_r.value(),
                 lfo,
+                lfo_cut: self.params.lfo_amt.smoothed.next(),
+                lfo_pitch: self.params.lfo_pitch.smoothed.next(),
+                lfo_pwm: self.params.lfo_pwm.smoothed.next(),
                 glide_ms: self.params.glide.value(),
             };
 

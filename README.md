@@ -1,6 +1,6 @@
 # Sunder
 
-Version **0.2.2**. Virtual analog CLAP synthesizer for Bitwig on Linux: two oscillators + sub, hard sync, PWM, supersaw unison, driven SVF, chorus, and a factory/user preset bank.
+Version **0.4.2**. Virtual analog CLAP synthesizer for Bitwig on Linux: two oscillators + sub, hard sync, PWM, supersaw unison, driven SVF, chorus, and a factory/user preset bank.
 
 See `CHANGELOG.md` for release notes and `AGENTS.md` for how the project is put together.
 

@@ -65,16 +65,24 @@ pub struct Patch {
     pub osc2_mix: f32,
     pub osc2_oct: i32,
     pub osc2_semi: i32,
+    #[serde(default)]
+    pub osc2_cents: f32,
     pub osc2_pwm: f32,
     pub sync: bool,
     pub sub_mix: f32,
     pub sub_square: bool,
     pub noise: f32,
+    #[serde(default)]
+    pub noise_type: i32,
     pub cutoff: f32,
     pub res: f32,
     pub drive: f32,
     pub filt_env: f32,
     pub keytrack: f32,
+    #[serde(default)]
+    pub filt_mode: i32,
+    #[serde(default)]
+    pub four_pole: bool,
     pub amp_a: f32,
     pub amp_d: f32,
     pub amp_s: f32,
@@ -85,9 +93,15 @@ pub struct Patch {
     pub filt_r: f32,
     pub lfo_rate: f32,
     pub lfo_amt: f32,
+    #[serde(default)]
+    pub lfo_pitch: f32,
+    #[serde(default)]
+    pub lfo_pwm: f32,
     pub cho_mix: f32,
     pub cho_rate: f32,
     pub cho_depth: f32,
+    #[serde(default)]
+    pub legato: bool,
 }
 
 impl Default for Patch {
@@ -113,16 +127,20 @@ pub fn snapshot(p: &SunderParams) -> Patch {
         osc2_mix: p.osc2_mix.unmodulated_plain_value(),
         osc2_oct: p.osc2_oct.unmodulated_plain_value(),
         osc2_semi: p.osc2_semi.unmodulated_plain_value(),
+        osc2_cents: p.osc2_cents.unmodulated_plain_value(),
         osc2_pwm: p.osc2_pwm.unmodulated_plain_value(),
         sync: p.sync.unmodulated_plain_value(),
         sub_mix: p.sub_mix.unmodulated_plain_value(),
         sub_square: p.sub_square.unmodulated_plain_value(),
         noise: p.noise.unmodulated_plain_value(),
+        noise_type: p.noise_type.unmodulated_plain_value().to_index() as i32,
         cutoff: p.cutoff.unmodulated_plain_value(),
         res: p.res.unmodulated_plain_value(),
         drive: p.drive.unmodulated_plain_value(),
         filt_env: p.filt_env.unmodulated_plain_value(),
         keytrack: p.keytrack.unmodulated_plain_value(),
+        filt_mode: p.filt_mode.unmodulated_plain_value().to_index() as i32,
+        four_pole: p.four_pole.unmodulated_plain_value(),
         amp_a: p.amp_a.unmodulated_plain_value(),
         amp_d: p.amp_d.unmodulated_plain_value(),
         amp_s: p.amp_s.unmodulated_plain_value(),
@@ -133,9 +151,12 @@ pub fn snapshot(p: &SunderParams) -> Patch {
         filt_r: p.filt_r.unmodulated_plain_value(),
         lfo_rate: p.lfo_rate.unmodulated_plain_value(),
         lfo_amt: p.lfo_amt.unmodulated_plain_value(),
+        lfo_pitch: p.lfo_pitch.unmodulated_plain_value(),
+        lfo_pwm: p.lfo_pwm.unmodulated_plain_value(),
         cho_mix: p.cho_mix.unmodulated_plain_value(),
         cho_rate: p.cho_rate.unmodulated_plain_value(),
         cho_depth: p.cho_depth.unmodulated_plain_value(),
+        legato: p.legato.unmodulated_plain_value(),
     }
 }
 
@@ -151,6 +172,7 @@ fn write_patch(state: &mut PluginState, patch: &Patch) {
     let p = &mut state.params;
     p.insert("gain".into(), ParamValue::F32(patch.gain));
     p.insert("glide".into(), ParamValue::F32(patch.glide));
+    p.insert("legato".into(), ParamValue::Bool(patch.legato));
     p.insert("o1wav".into(), ParamValue::String(wave_id(patch.osc1_wave).into()));
     p.insert("o1mix".into(), ParamValue::F32(patch.osc1_mix));
     p.insert("o1oct".into(), ParamValue::I32(patch.osc1_oct));
@@ -163,16 +185,20 @@ fn write_patch(state: &mut PluginState, patch: &Patch) {
     p.insert("o2mix".into(), ParamValue::F32(patch.osc2_mix));
     p.insert("o2oct".into(), ParamValue::I32(patch.osc2_oct));
     p.insert("o2semi".into(), ParamValue::I32(patch.osc2_semi));
+    p.insert("o2ct".into(), ParamValue::F32(patch.osc2_cents));
     p.insert("o2pwm".into(), ParamValue::F32(patch.osc2_pwm));
     p.insert("sync".into(), ParamValue::Bool(patch.sync));
     p.insert("sub".into(), ParamValue::F32(patch.sub_mix));
     p.insert("subsq".into(), ParamValue::Bool(patch.sub_square));
     p.insert("noise".into(), ParamValue::F32(patch.noise));
+    p.insert("ntype".into(), ParamValue::String(noise_id(patch.noise_type).into()));
     p.insert("cut".into(), ParamValue::F32(patch.cutoff));
     p.insert("res".into(), ParamValue::F32(patch.res));
     p.insert("drv".into(), ParamValue::F32(patch.drive));
     p.insert("fenv".into(), ParamValue::F32(patch.filt_env));
     p.insert("ktrk".into(), ParamValue::F32(patch.keytrack));
+    p.insert("fmode".into(), ParamValue::String(filt_id(patch.filt_mode).into()));
+    p.insert("fpole".into(), ParamValue::Bool(patch.four_pole));
     p.insert("aatk".into(), ParamValue::F32(patch.amp_a));
     p.insert("adec".into(), ParamValue::F32(patch.amp_d));
     p.insert("asus".into(), ParamValue::F32(patch.amp_s));
@@ -183,9 +209,28 @@ fn write_patch(state: &mut PluginState, patch: &Patch) {
     p.insert("frel".into(), ParamValue::F32(patch.filt_r));
     p.insert("lfohz".into(), ParamValue::F32(patch.lfo_rate));
     p.insert("lfoamt".into(), ParamValue::F32(patch.lfo_amt));
+    p.insert("lfopit".into(), ParamValue::F32(patch.lfo_pitch));
+    p.insert("lfopwm".into(), ParamValue::F32(patch.lfo_pwm));
     p.insert("chmix".into(), ParamValue::F32(patch.cho_mix));
     p.insert("chrate".into(), ParamValue::F32(patch.cho_rate));
     p.insert("chdpth".into(), ParamValue::F32(patch.cho_depth));
+}
+
+fn noise_id(i: i32) -> &'static str {
+    match i {
+        1 => "pink",
+        2 => "brown",
+        3 => "digi",
+        _ => "white",
+    }
+}
+
+fn filt_id(i: i32) -> &'static str {
+    match i {
+        1 => "bp",
+        2 => "hp",
+        _ => "lp",
+    }
 }
 
 fn wave_id(i: i32) -> &'static str {

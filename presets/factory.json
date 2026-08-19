@@ -2401,10 +2401,13 @@
       "filt_s": 0.5,
       "filt_r": 800.0,
       "lfo_rate": 0.22,
-      "lfo_amt": 0.12,
+      "lfo_amt": 0.0,
       "cho_mix": 0.72,
       "cho_rate": 0.55,
-      "cho_depth": 0.62
+      "cho_depth": 0.62,
+      "four_pole": true,
+      "osc2_cents": 4.0,
+      "lfo_pwm": 0.12
     }
   },
   {
@@ -2447,7 +2450,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.55,
       "cho_rate": 0.5,
-      "cho_depth": 0.5
+      "cho_depth": 0.5,
+      "four_pole": true,
+      "osc2_cents": 5.0
     }
   },
   {
@@ -2486,11 +2491,14 @@
       "filt_d": 180.0,
       "filt_s": 0.35,
       "filt_r": 220.0,
-      "lfo_rate": 0.35,
-      "lfo_amt": 0.28,
+      "lfo_rate": 0.28,
+      "lfo_amt": 0.0,
       "cho_mix": 0.65,
       "cho_rate": 0.6,
-      "cho_depth": 0.55
+      "cho_depth": 0.55,
+      "four_pole": true,
+      "osc2_cents": 3.0,
+      "lfo_pwm": 0.42
     }
   },
   {
@@ -2533,7 +2541,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.2,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 7.0
     }
   },
   {
@@ -2576,7 +2586,10 @@
       "lfo_amt": 0.1,
       "cho_mix": 0.4,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 6.0,
+      "lfo_pwm": 0.1
     }
   },
   {
@@ -2584,7 +2597,7 @@
     "category": "Famous",
     "params": {
       "gain": 0.5011872336272722,
-      "glide": 0.0,
+      "glide": 40.0,
       "osc1_wave": 0,
       "osc1_mix": 0.9,
       "osc1_oct": 0,
@@ -2619,7 +2632,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 5.0,
+      "legato": true
     }
   },
   {
@@ -2791,7 +2807,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.15,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 8.0
     }
   },
   {
@@ -2834,7 +2852,10 @@
       "lfo_amt": 0.18,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "osc2_cents": 7.0,
+      "lfo_pwm": 0.18
     }
   },
   {
@@ -2877,7 +2898,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 6.5
     }
   },
   {
@@ -2920,7 +2943,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.12,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 7.0
     }
   },
   {
@@ -2963,7 +2988,10 @@
       "lfo_amt": 0.2,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 5.0,
+      "lfo_pwm": 0.22
     }
   },
   {
@@ -3006,7 +3034,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 6.0
     }
   },
   {
@@ -3014,7 +3044,7 @@
     "category": "Famous",
     "params": {
       "gain": 0.5011872336272722,
-      "glide": 45,
+      "glide": 90.0,
       "osc1_wave": 0,
       "osc1_mix": 0.9,
       "osc1_oct": 0,
@@ -3045,11 +3075,15 @@
       "filt_d": 160,
       "filt_s": 0.35,
       "filt_r": 220.0,
-      "lfo_rate": 0.4,
-      "lfo_amt": 0.0,
+      "lfo_rate": 5.6,
+      "lfo_amt": 0.06,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 6.0,
+      "legato": true,
+      "lfo_pitch": 0.28
     }
   },
   {
@@ -3092,7 +3126,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 4.0
     }
   },
   {
@@ -3135,7 +3171,9 @@
       "lfo_amt": 0.12,
       "cho_mix": 0.35,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 8.0
     }
   },
   {
@@ -3143,7 +3181,7 @@
     "category": "Famous",
     "params": {
       "gain": 0.5011872336272722,
-      "glide": 20,
+      "glide": 35.0,
       "osc1_wave": 0,
       "osc1_mix": 0.95,
       "osc1_oct": 0,
@@ -3178,7 +3216,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "osc2_cents": 9.0,
+      "legato": true
     }
   },
   {
@@ -3221,7 +3262,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "osc2_cents": 8.0,
+      "filt_mode": 1
     }
   },
   {
@@ -3264,7 +3308,9 @@
       "lfo_amt": 0.08,
       "cho_mix": 0.78,
       "cho_rate": 0.48,
-      "cho_depth": 0.7
+      "cho_depth": 0.7,
+      "four_pole": true,
+      "osc2_cents": 5.0
     }
   },
   {
@@ -3307,7 +3353,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 3.0,
+      "legato": true
     }
   },
   {
@@ -3315,7 +3364,7 @@
     "category": "Famous",
     "params": {
       "gain": 0.5011872336272722,
-      "glide": 8,
+      "glide": 18.0,
       "osc1_wave": 1,
       "osc1_mix": 0.85,
       "osc1_oct": 0,
@@ -3350,7 +3399,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 2.0,
+      "legato": true
     }
   },
   {
@@ -3358,7 +3410,7 @@
     "category": "Famous",
     "params": {
       "gain": 0.5011872336272722,
-      "glide": 35,
+      "glide": 25.0,
       "osc1_wave": 1,
       "osc1_mix": 0.95,
       "osc1_oct": 0,
@@ -3393,7 +3445,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 0.0,
+      "legato": true
     }
   },
   {
@@ -3436,7 +3491,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.18,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 6.0
     }
   },
   {
@@ -3479,7 +3536,10 @@
       "lfo_amt": 0.1,
       "cho_mix": 0.3,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 4.0,
+      "lfo_pitch": 0.08
     }
   },
   {
@@ -3522,7 +3582,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "osc2_cents": 5.0
     }
   },
   {
@@ -3565,7 +3627,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.15,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "osc2_cents": 4.0,
+      "filt_mode": 1
     }
   },
   {
@@ -3605,10 +3670,12 @@
       "filt_s": 0.4,
       "filt_r": 220.0,
       "lfo_rate": 0.08,
-      "lfo_amt": 0.42,
+      "lfo_amt": 0.22,
       "cho_mix": 0.22,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 5.0
     }
   },
   {
@@ -3616,7 +3683,7 @@
     "category": "Famous",
     "params": {
       "gain": 0.5011872336272722,
-      "glide": 55,
+      "glide": 55.0,
       "osc1_wave": 0,
       "osc1_mix": 0.9,
       "osc1_oct": 0,
@@ -3651,7 +3718,11 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 7.0,
+      "legato": true,
+      "lfo_pitch": 0.18
     }
   },
   {
@@ -3694,7 +3765,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "filt_mode": 2,
+      "osc2_cents": 4.0
     }
   },
   {
@@ -3737,7 +3811,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "osc2_cents": 3.0
     }
   },
   {
@@ -3780,7 +3856,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.68,
       "cho_rate": 0.6,
-      "cho_depth": 0.58
+      "cho_depth": 0.58,
+      "four_pole": true,
+      "osc2_cents": 4.0,
+      "lfo_pwm": 0.2
     }
   },
   {
@@ -3823,7 +3902,8 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.08,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true
     }
   },
   {
@@ -3866,7 +3946,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.2,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 2.0
     }
   },
   {
@@ -3909,7 +3991,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.35,
       "cho_rate": 0.4,
-      "cho_depth": 0.4
+      "cho_depth": 0.4,
+      "four_pole": true,
+      "filt_mode": 2,
+      "osc2_cents": 3.0
     }
   },
   {
@@ -3952,7 +4037,9 @@
       "lfo_amt": 0.14,
       "cho_mix": 0.5,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 5.0
     }
   },
   {
@@ -3995,7 +4082,9 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.28,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 5.0
     }
   },
   {
@@ -4034,11 +4123,14 @@
       "filt_d": 180.0,
       "filt_s": 0.35,
       "filt_r": 220.0,
-      "lfo_rate": 0.3,
-      "lfo_amt": 0.15,
+      "lfo_rate": 0.32,
+      "lfo_amt": 0.0,
       "cho_mix": 0.62,
       "cho_rate": 0.6,
-      "cho_depth": 0.55
+      "cho_depth": 0.55,
+      "four_pole": true,
+      "osc2_cents": 4.0,
+      "lfo_pwm": 0.28
     }
   },
   {
@@ -4253,7 +4345,10 @@
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "filt_mode": 2,
+      "osc2_cents": 2.0
     }
   },
   {
@@ -4296,7 +4391,10 @@
       "lfo_amt": 0.22,
       "cho_mix": 0.2,
       "cho_rate": 0.6,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "filt_mode": 2,
+      "osc2_cents": 10.0
     }
   },
   {
@@ -5343,10 +5441,10 @@
       "osc1_semi": 0,
       "osc1_pwm": 0.5,
       "unison": 2,
-      "detune": 7.0,
-      "stereo": 0.42,
+      "detune": 7.5,
+      "stereo": 0.4,
       "osc2_wave": 0,
-      "osc2_mix": 0.88,
+      "osc2_mix": 0.9,
       "osc2_oct": 0,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
@@ -5354,24 +5452,27 @@
       "sub_mix": 0.0,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 3400.0,
-      "res": 0.12,
-      "drive": 0.22,
-      "filt_env": 0.18,
-      "keytrack": 0.28,
+      "noise_type": 0,
+      "cutoff": 3600.0,
+      "res": 0.14,
+      "drive": 0.24,
+      "filt_env": 0.2,
+      "keytrack": 0.25,
       "amp_a": 4.0,
-      "amp_d": 90.0,
-      "amp_s": 0.74,
-      "amp_r": 170.0,
-      "filt_a": 2.0,
-      "filt_d": 70.0,
-      "filt_s": 0.42,
-      "filt_r": 140.0,
+      "amp_d": 85.0,
+      "amp_s": 0.76,
+      "amp_r": 160.0,
+      "filt_a": 3.0,
+      "filt_d": 65.0,
+      "filt_s": 0.45,
+      "filt_r": 130.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.55,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": false,
+      "osc2_cents": 7.0
     }
   },
   {
@@ -5379,42 +5480,47 @@
     "category": "Songs",
     "params": {
       "gain": 0.5011872336272722,
-      "glide": 55.0,
+      "glide": 70.0,
       "osc1_wave": 1,
       "osc1_mix": 1.0,
       "osc1_oct": 1,
       "osc1_semi": 0,
-      "osc1_pwm": 0.48,
+      "osc1_pwm": 0.47,
       "unison": 1,
       "detune": 8.0,
       "stereo": 0.35,
       "osc2_wave": 1,
-      "osc2_mix": 0.15,
+      "osc2_mix": 0.12,
       "osc2_oct": 1,
       "osc2_semi": 0,
-      "osc2_pwm": 0.52,
+      "osc2_pwm": 0.5,
       "sync": false,
       "sub_mix": 0.0,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 6200.0,
+      "noise_type": 1,
+      "cutoff": 6800.0,
       "res": 0.08,
       "drive": 0.08,
-      "filt_env": 0.05,
-      "keytrack": 0.45,
+      "filt_env": 0.04,
+      "keytrack": 0.4,
       "amp_a": 3.0,
-      "amp_d": 60.0,
+      "amp_d": 50.0,
       "amp_s": 1.0,
-      "amp_r": 85.0,
+      "amp_r": 80.0,
       "filt_a": 3.0,
-      "filt_d": 80.0,
+      "filt_d": 70.0,
       "filt_s": 0.9,
-      "filt_r": 80.0,
-      "lfo_rate": 0.4,
+      "filt_r": 70.0,
+      "lfo_rate": 0.3,
       "lfo_amt": 0.0,
-      "cho_mix": 0.58,
+      "cho_mix": 0.6,
       "cho_rate": 0.52,
-      "cho_depth": 0.52
+      "cho_depth": 0.55,
+      "four_pole": true,
+      "osc2_cents": 2.0,
+      "legato": true,
+      "lfo_pwm": 0.3
     }
   },
   {
@@ -5424,40 +5530,44 @@
       "gain": 0.5011872336272722,
       "glide": 0.0,
       "osc1_wave": 0,
-      "osc1_mix": 0.7,
+      "osc1_mix": 0.65,
       "osc1_oct": 0,
       "osc1_semi": 0,
       "osc1_pwm": 0.5,
       "unison": 3,
       "detune": 6.0,
-      "stereo": 0.7,
+      "stereo": 0.72,
       "osc2_wave": 1,
-      "osc2_mix": 0.55,
+      "osc2_mix": 0.6,
       "osc2_oct": 0,
       "osc2_semi": 0,
-      "osc2_pwm": 0.38,
+      "osc2_pwm": 0.36,
       "sync": false,
-      "sub_mix": 0.05,
+      "sub_mix": 0.0,
       "sub_square": false,
-      "noise": 0.0,
-      "cutoff": 1450.0,
-      "res": 0.46,
-      "drive": 0.16,
-      "filt_env": 0.08,
-      "keytrack": 0.4,
-      "amp_a": 55.0,
-      "amp_d": 220.0,
-      "amp_s": 0.95,
-      "amp_r": 380.0,
-      "filt_a": 70.0,
-      "filt_d": 280.0,
-      "filt_s": 0.7,
-      "filt_r": 320.0,
-      "lfo_rate": 0.15,
-      "lfo_amt": 0.07,
-      "cho_mix": 0.62,
-      "cho_rate": 0.42,
-      "cho_depth": 0.58
+      "noise": 0.05,
+      "noise_type": 1,
+      "cutoff": 1380.0,
+      "res": 0.44,
+      "drive": 0.14,
+      "filt_env": 0.06,
+      "keytrack": 0.42,
+      "amp_a": 60.0,
+      "amp_d": 240.0,
+      "amp_s": 0.96,
+      "amp_r": 400.0,
+      "filt_a": 80.0,
+      "filt_d": 300.0,
+      "filt_s": 0.72,
+      "filt_r": 340.0,
+      "lfo_rate": 0.12,
+      "lfo_amt": 0.05,
+      "cho_mix": 0.64,
+      "cho_rate": 0.4,
+      "cho_depth": 0.6,
+      "four_pole": true,
+      "filt_mode": 1,
+      "osc2_cents": 5.0
     }
   },
   {
@@ -5470,37 +5580,40 @@
       "osc1_mix": 0.92,
       "osc1_oct": 0,
       "osc1_semi": 0,
-      "osc1_pwm": 0.28,
+      "osc1_pwm": 0.26,
       "unison": 2,
-      "detune": 5.0,
-      "stereo": 0.18,
+      "detune": 4.5,
+      "stereo": 0.16,
       "osc2_wave": 0,
-      "osc2_mix": 0.38,
+      "osc2_mix": 0.32,
       "osc2_oct": 0,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
-      "sub_mix": 0.08,
+      "sub_mix": 0.1,
       "sub_square": true,
-      "noise": 0.0,
-      "cutoff": 2100.0,
-      "res": 0.22,
-      "drive": 0.42,
-      "filt_env": 0.12,
-      "keytrack": 0.15,
+      "noise": 0.03,
+      "noise_type": 3,
+      "cutoff": 1950.0,
+      "res": 0.2,
+      "drive": 0.4,
+      "filt_env": 0.1,
+      "keytrack": 0.12,
       "amp_a": 3.0,
-      "amp_d": 55.0,
-      "amp_s": 0.82,
-      "amp_r": 70.0,
+      "amp_d": 50.0,
+      "amp_s": 0.84,
+      "amp_r": 65.0,
       "filt_a": 2.0,
-      "filt_d": 65.0,
-      "filt_s": 0.55,
-      "filt_r": 70.0,
+      "filt_d": 55.0,
+      "filt_s": 0.58,
+      "filt_r": 60.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.55,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 5.0
     }
   },
   {
@@ -5518,32 +5631,35 @@
       "detune": 8.0,
       "stereo": 0.35,
       "osc2_wave": 0,
-      "osc2_mix": 0.18,
+      "osc2_mix": 0.2,
       "osc2_oct": -1,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
-      "sub_mix": 0.55,
+      "sub_mix": 0.58,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 140.0,
-      "res": 0.22,
+      "noise_type": 0,
+      "cutoff": 135.0,
+      "res": 0.24,
       "drive": 0.3,
-      "filt_env": 0.32,
-      "keytrack": 0.12,
+      "filt_env": 0.3,
+      "keytrack": 0.1,
       "amp_a": 2.0,
-      "amp_d": 180.0,
-      "amp_s": 0.78,
-      "amp_r": 70.0,
+      "amp_d": 170.0,
+      "amp_s": 0.8,
+      "amp_r": 65.0,
       "filt_a": 2.0,
-      "filt_d": 160.0,
-      "filt_s": 0.12,
-      "filt_r": 80.0,
+      "filt_d": 150.0,
+      "filt_s": 0.1,
+      "filt_r": 70.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.55,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 3.0
     }
   },
   {
@@ -5559,9 +5675,9 @@
       "osc1_pwm": 0.5,
       "unison": 2,
       "detune": 8.0,
-      "stereo": 0.4,
+      "stereo": 0.38,
       "osc2_wave": 0,
-      "osc2_mix": 0.7,
+      "osc2_mix": 0.68,
       "osc2_oct": 0,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
@@ -5569,24 +5685,27 @@
       "sub_mix": 0.0,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 3800.0,
-      "res": 0.14,
-      "drive": 0.18,
-      "filt_env": 0.2,
-      "keytrack": 0.3,
+      "noise_type": 0,
+      "cutoff": 3600.0,
+      "res": 0.13,
+      "drive": 0.16,
+      "filt_env": 0.18,
+      "keytrack": 0.28,
       "amp_a": 8.0,
-      "amp_d": 140.0,
-      "amp_s": 0.82,
-      "amp_r": 220.0,
+      "amp_d": 130.0,
+      "amp_s": 0.84,
+      "amp_r": 200.0,
       "filt_a": 6.0,
-      "filt_d": 110.0,
-      "filt_s": 0.5,
-      "filt_r": 180.0,
+      "filt_d": 100.0,
+      "filt_s": 0.52,
+      "filt_r": 160.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
-      "cho_mix": 0.48,
+      "cho_mix": 0.5,
       "cho_rate": 0.55,
-      "cho_depth": 0.5
+      "cho_depth": 0.5,
+      "four_pole": true,
+      "osc2_cents": 6.0
     }
   },
   {
@@ -5596,7 +5715,7 @@
       "gain": 0.5011872336272722,
       "glide": 0.0,
       "osc1_wave": 0,
-      "osc1_mix": 0.5,
+      "osc1_mix": 0.48,
       "osc1_oct": -1,
       "osc1_semi": 0,
       "osc1_pwm": 0.5,
@@ -5609,70 +5728,76 @@
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
-      "sub_mix": 0.82,
+      "sub_mix": 0.85,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 110.0,
+      "noise_type": 0,
+      "cutoff": 105.0,
       "res": 0.14,
       "drive": 0.22,
-      "filt_env": 0.28,
-      "keytrack": 0.18,
+      "filt_env": 0.26,
+      "keytrack": 0.16,
       "amp_a": 2.0,
-      "amp_d": 95.0,
-      "amp_s": 0.12,
-      "amp_r": 45.0,
+      "amp_d": 90.0,
+      "amp_s": 0.1,
+      "amp_r": 40.0,
       "filt_a": 2.0,
-      "filt_d": 70.0,
+      "filt_d": 65.0,
       "filt_s": 0.04,
-      "filt_r": 50.0,
+      "filt_r": 45.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.55,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true
     }
   },
   {
     "name": "Chase Square - Axel F",
     "category": "Songs",
     "params": {
-      "gain": 0.5011872336272722,
-      "glide": 165.0,
+      "gain": 0.75778437,
+      "glide": 150.0,
       "osc1_wave": 1,
-      "osc1_mix": 0.92,
+      "osc1_mix": 0.7,
       "osc1_oct": 0,
       "osc1_semi": 0,
       "osc1_pwm": 0.38,
       "unison": 2,
-      "detune": 3.5,
-      "stereo": 0.18,
-      "osc2_wave": 0,
-      "osc2_mix": 0.42,
+      "detune": 8.1,
+      "stereo": 0.45,
+      "osc2_wave": 2,
+      "osc2_mix": 0.89,
       "osc2_oct": 0,
       "osc2_semi": 0,
-      "osc2_pwm": 0.5,
+      "osc2_pwm": 0.93,
       "sync": false,
-      "sub_mix": 0.22,
+      "sub_mix": 0.0,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 1850.0,
-      "res": 0.26,
-      "drive": 0.22,
-      "filt_env": 0.16,
-      "keytrack": 0.55,
-      "amp_a": 2.0,
-      "amp_d": 80.0,
-      "amp_s": 1.0,
-      "amp_r": 110.0,
-      "filt_a": 3.0,
+      "noise_type": 3,
+      "cutoff": 840.20245,
+      "res": 0.5625751,
+      "drive": 0.19999999,
+      "filt_env": 1.0,
+      "keytrack": 0.63,
+      "amp_a": 18.9,
+      "amp_d": 153.0,
+      "amp_s": 0.62,
+      "amp_r": 78.1,
+      "filt_a": 9.2,
       "filt_d": 110.0,
       "filt_s": 0.55,
       "filt_r": 100.0,
-      "lfo_rate": 0.4,
+      "lfo_rate": 0.05,
       "lfo_amt": 0.0,
-      "cho_mix": 0.12,
-      "cho_rate": 0.55,
-      "cho_depth": 0.32
+      "cho_mix": 0.32999998,
+      "cho_rate": 0.05,
+      "cho_depth": 0.22,
+      "four_pole": true,
+      "osc2_cents": 3.5,
+      "legato": true
     }
   },
   {
@@ -5682,7 +5807,7 @@
       "gain": 0.5011872336272722,
       "glide": 0.0,
       "osc1_wave": 0,
-      "osc1_mix": 0.85,
+      "osc1_mix": 0.88,
       "osc1_oct": -1,
       "osc1_semi": 0,
       "osc1_pwm": 0.5,
@@ -5690,32 +5815,36 @@
       "detune": 8.0,
       "stereo": 0.35,
       "osc2_wave": 0,
-      "osc2_mix": 0.2,
+      "osc2_mix": 0.18,
       "osc2_oct": -1,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
-      "sub_mix": 0.28,
+      "sub_mix": 0.3,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 520.0,
-      "res": 0.4,
-      "drive": 0.28,
-      "filt_env": 0.16,
-      "keytrack": 0.2,
+      "noise_type": 0,
+      "cutoff": 480.0,
+      "res": 0.42,
+      "drive": 0.26,
+      "filt_env": 0.14,
+      "keytrack": 0.18,
       "amp_a": 2.0,
-      "amp_d": 70.0,
-      "amp_s": 0.45,
-      "amp_r": 40.0,
+      "amp_d": 65.0,
+      "amp_s": 0.42,
+      "amp_r": 35.0,
       "filt_a": 2.0,
-      "filt_d": 55.0,
-      "filt_s": 0.22,
-      "filt_r": 40.0,
+      "filt_d": 50.0,
+      "filt_s": 0.2,
+      "filt_r": 35.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.55,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 2.0,
+      "legato": true
     }
   },
   {
@@ -5728,37 +5857,41 @@
       "osc1_mix": 0.95,
       "osc1_oct": 0,
       "osc1_semi": 0,
-      "osc1_pwm": 0.26,
+      "osc1_pwm": 0.24,
       "unison": 1,
       "detune": 8.0,
       "stereo": 0.35,
       "osc2_wave": 0,
-      "osc2_mix": 0.22,
+      "osc2_mix": 0.2,
       "osc2_oct": 0,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
       "sub_mix": 0.0,
       "sub_square": false,
-      "noise": 0.0,
-      "cutoff": 1050.0,
-      "res": 0.24,
+      "noise": 0.07,
+      "noise_type": 3,
+      "cutoff": 980.0,
+      "res": 0.26,
       "drive": 0.14,
-      "filt_env": 0.1,
-      "keytrack": 0.22,
+      "filt_env": 0.08,
+      "keytrack": 0.2,
       "amp_a": 4.0,
-      "amp_d": 180.0,
-      "amp_s": 0.55,
-      "amp_r": 220.0,
+      "amp_d": 170.0,
+      "amp_s": 0.52,
+      "amp_r": 200.0,
       "filt_a": 4.0,
-      "filt_d": 200.0,
-      "filt_s": 0.4,
-      "filt_r": 200.0,
+      "filt_d": 180.0,
+      "filt_s": 0.38,
+      "filt_r": 180.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
-      "cho_mix": 0.12,
-      "cho_rate": 0.35,
-      "cho_depth": 0.35
+      "cho_mix": 0.1,
+      "cho_rate": 0.32,
+      "cho_depth": 0.32,
+      "four_pole": false,
+      "osc2_cents": 6.0,
+      "lfo_pwm": 0.12
     }
   },
   {
@@ -5774,9 +5907,9 @@
       "osc1_pwm": 0.5,
       "unison": 5,
       "detune": 22.0,
-      "stereo": 0.88,
+      "stereo": 0.9,
       "osc2_wave": 1,
-      "osc2_mix": 0.22,
+      "osc2_mix": 0.2,
       "osc2_oct": 0,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
@@ -5784,24 +5917,27 @@
       "sub_mix": 0.0,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 8200.0,
-      "res": 0.06,
-      "drive": 0.18,
-      "filt_env": 0.08,
-      "keytrack": 0.2,
-      "amp_a": 5.0,
-      "amp_d": 80.0,
+      "noise_type": 0,
+      "cutoff": 8500.0,
+      "res": 0.05,
+      "drive": 0.16,
+      "filt_env": 0.06,
+      "keytrack": 0.18,
+      "amp_a": 4.0,
+      "amp_d": 70.0,
       "amp_s": 1.0,
-      "amp_r": 90.0,
-      "filt_a": 5.0,
-      "filt_d": 100.0,
-      "filt_s": 0.85,
-      "filt_r": 90.0,
+      "amp_r": 80.0,
+      "filt_a": 4.0,
+      "filt_d": 80.0,
+      "filt_s": 0.88,
+      "filt_r": 80.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
-      "cho_mix": 0.18,
-      "cho_rate": 0.7,
-      "cho_depth": 0.35
+      "cho_mix": 0.16,
+      "cho_rate": 0.72,
+      "cho_depth": 0.32,
+      "four_pole": true,
+      "osc2_cents": 8.0
     }
   },
   {
@@ -5816,35 +5952,38 @@
       "osc1_semi": 0,
       "osc1_pwm": 0.5,
       "unison": 4,
-      "detune": 13.0,
-      "stereo": 0.8,
+      "detune": 12.0,
+      "stereo": 0.82,
       "osc2_wave": 0,
-      "osc2_mix": 0.55,
+      "osc2_mix": 0.52,
       "osc2_oct": 0,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
       "sub_mix": 0.0,
       "sub_square": false,
-      "noise": 0.0,
-      "cutoff": 4500.0,
+      "noise": 0.04,
+      "noise_type": 1,
+      "cutoff": 4200.0,
       "res": 0.1,
-      "drive": 0.28,
-      "filt_env": 0.12,
-      "keytrack": 0.3,
-      "amp_a": 18.0,
-      "amp_d": 250.0,
+      "drive": 0.26,
+      "filt_env": 0.1,
+      "keytrack": 0.28,
+      "amp_a": 16.0,
+      "amp_d": 220.0,
       "amp_s": 0.88,
-      "amp_r": 650.0,
-      "filt_a": 20.0,
-      "filt_d": 300.0,
+      "amp_r": 620.0,
+      "filt_a": 18.0,
+      "filt_d": 260.0,
       "filt_s": 0.65,
-      "filt_r": 500.0,
+      "filt_r": 480.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
-      "cho_mix": 0.62,
-      "cho_rate": 0.48,
-      "cho_depth": 0.65
+      "cho_mix": 0.64,
+      "cho_rate": 0.46,
+      "cho_depth": 0.66,
+      "four_pole": true,
+      "osc2_cents": 7.0
     }
   },
   {
@@ -5852,7 +5991,7 @@
     "category": "Songs",
     "params": {
       "gain": 0.5011872336272722,
-      "glide": 220.0,
+      "glide": 180.0,
       "osc1_wave": 0,
       "osc1_mix": 1.0,
       "osc1_oct": 0,
@@ -5860,34 +5999,39 @@
       "osc1_pwm": 0.5,
       "unison": 2,
       "detune": 4.0,
-      "stereo": 0.15,
+      "stereo": 0.12,
       "osc2_wave": 0,
-      "osc2_mix": 0.4,
+      "osc2_mix": 0.38,
       "osc2_oct": 0,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
-      "sub_mix": 0.18,
+      "sub_mix": 0.16,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 1900.0,
-      "res": 0.48,
-      "drive": 0.38,
-      "filt_env": 0.22,
-      "keytrack": 0.45,
+      "noise_type": 0,
+      "cutoff": 1750.0,
+      "res": 0.5,
+      "drive": 0.36,
+      "filt_env": 0.2,
+      "keytrack": 0.48,
       "amp_a": 4.0,
-      "amp_d": 100.0,
+      "amp_d": 90.0,
       "amp_s": 0.95,
-      "amp_r": 220.0,
-      "filt_a": 6.0,
-      "filt_d": 160.0,
-      "filt_s": 0.5,
-      "filt_r": 180.0,
+      "amp_r": 200.0,
+      "filt_a": 5.0,
+      "filt_d": 140.0,
+      "filt_s": 0.48,
+      "filt_r": 160.0,
       "lfo_rate": 5.8,
-      "lfo_amt": 0.09,
+      "lfo_amt": 0.04,
       "cho_mix": 0.0,
       "cho_rate": 0.55,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 5.0,
+      "legato": true,
+      "lfo_pitch": 0.32
     }
   },
   {
@@ -5902,35 +6046,38 @@
       "osc1_semi": 0,
       "osc1_pwm": 0.5,
       "unison": 2,
-      "detune": 11.0,
-      "stereo": 0.38,
+      "detune": 10.0,
+      "stereo": 0.36,
       "osc2_wave": 0,
-      "osc2_mix": 0.75,
+      "osc2_mix": 0.78,
       "osc2_oct": 0,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
-      "sub_mix": 0.12,
+      "sub_mix": 0.1,
       "sub_square": false,
       "noise": 0.0,
-      "cutoff": 2100.0,
-      "res": 0.28,
-      "drive": 0.45,
-      "filt_env": 0.38,
-      "keytrack": 0.22,
+      "noise_type": 0,
+      "cutoff": 2000.0,
+      "res": 0.3,
+      "drive": 0.46,
+      "filt_env": 0.36,
+      "keytrack": 0.2,
       "amp_a": 5.0,
-      "amp_d": 120.0,
+      "amp_d": 110.0,
       "amp_s": 0.72,
-      "amp_r": 160.0,
+      "amp_r": 150.0,
       "filt_a": 4.0,
-      "filt_d": 90.0,
-      "filt_s": 0.28,
-      "filt_r": 140.0,
+      "filt_d": 85.0,
+      "filt_s": 0.26,
+      "filt_r": 130.0,
       "lfo_rate": 0.4,
       "lfo_amt": 0.0,
       "cho_mix": 0.0,
       "cho_rate": 0.55,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 8.0
     }
   },
   {
@@ -5940,40 +6087,43 @@
       "gain": 0.5011872336272722,
       "glide": 0.0,
       "osc1_wave": 1,
-      "osc1_mix": 0.7,
+      "osc1_mix": 0.72,
       "osc1_oct": -1,
       "osc1_semi": 0,
-      "osc1_pwm": 0.42,
+      "osc1_pwm": 0.4,
       "unison": 1,
       "detune": 8.0,
       "stereo": 0.35,
       "osc2_wave": 0,
-      "osc2_mix": 0.4,
+      "osc2_mix": 0.38,
       "osc2_oct": -1,
       "osc2_semi": 0,
       "osc2_pwm": 0.5,
       "sync": false,
-      "sub_mix": 0.35,
+      "sub_mix": 0.32,
       "sub_square": true,
       "noise": 0.0,
-      "cutoff": 680.0,
-      "res": 0.52,
-      "drive": 0.32,
-      "filt_env": 0.16,
-      "keytrack": 0.18,
+      "noise_type": 0,
+      "cutoff": 640.0,
+      "res": 0.54,
+      "drive": 0.3,
+      "filt_env": 0.14,
+      "keytrack": 0.16,
       "amp_a": 4.0,
-      "amp_d": 110.0,
+      "amp_d": 100.0,
       "amp_s": 0.88,
-      "amp_r": 90.0,
+      "amp_r": 85.0,
       "filt_a": 6.0,
-      "filt_d": 140.0,
-      "filt_s": 0.4,
-      "filt_r": 110.0,
-      "lfo_rate": 0.28,
-      "lfo_amt": 0.28,
+      "filt_d": 130.0,
+      "filt_s": 0.38,
+      "filt_r": 100.0,
+      "lfo_rate": 0.26,
+      "lfo_amt": 0.26,
       "cho_mix": 0.0,
       "cho_rate": 0.55,
-      "cho_depth": 0.45
+      "cho_depth": 0.45,
+      "four_pole": true,
+      "osc2_cents": 3.0
     }
   }
 ]

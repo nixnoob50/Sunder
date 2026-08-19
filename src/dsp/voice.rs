@@ -1,7 +1,8 @@
 //! Eight-voice VA engine: 2 osc + sub + supersaw unison into one filter.
 
 use crate::dsp::env::{Adsr, Stage};
-use crate::dsp::filter::{drive, Svf};
+use crate::dsp::filter::{drive, FilterMode, Svf};
+use crate::dsp::noise::{Noise, NoiseKind};
 use crate::dsp::osc::{self, Wave};
 
 pub const NUM_VOICES: usize = 8;
@@ -21,16 +22,20 @@ pub struct VoiceParams {
     pub osc2_mix: f32,
     pub osc2_oct: i32,
     pub osc2_semi: i32,
+    pub osc2_cents: f32,
     pub osc2_pwm: f32,
     pub sync: bool,
     pub sub_mix: f32,
     pub sub_square: bool,
     pub noise: f32,
+    pub noise_kind: NoiseKind,
     pub cutoff: f32,
     pub res: f32,
     pub drive: f32,
     pub filt_env: f32,
     pub keytrack: f32,
+    pub filt_mode: FilterMode,
+    pub four_pole: bool,
     pub amp_a: f32,
     pub amp_d: f32,
     pub amp_s: f32,
@@ -40,6 +45,9 @@ pub struct VoiceParams {
     pub filt_s: f32,
     pub filt_r: f32,
     pub lfo: f32,
+    pub lfo_cut: f32,
+    pub lfo_pitch: f32,
+    pub lfo_pwm: f32,
     pub glide_ms: f32,
 }
 
@@ -55,8 +63,9 @@ pub struct Voice {
     osc1: [f32; MAX_UNISON],
     osc2: f32,
     sub: f32,
-    noise: u32,
+    noise_gen: Noise,
     filter: Svf,
+    filter2: Svf,
     amp: Adsr,
     filt: Adsr,
 }
@@ -74,8 +83,9 @@ impl Default for Voice {
             osc1: [0.0; MAX_UNISON],
             osc2: 0.0,
             sub: 0.0,
-            noise: 1,
+            noise_gen: Noise::default(),
             filter: Svf::default(),
+            filter2: Svf::default(),
             amp: Adsr::default(),
             filt: Adsr::default(),
         }
@@ -109,8 +119,9 @@ impl Voice {
         }
         self.osc2 = 0.31;
         self.sub = 0.0;
-        self.noise = 0xA341_316C ^ (note as u32).wrapping_mul(0x9E37);
+        self.noise_gen.seed(0xA341_316C ^ (note as u32).wrapping_mul(0x9E37));
         self.filter.reset();
+        self.filter2.reset();
         self.amp.note_on();
         self.filt.note_on();
         let _ = sample_rate;
@@ -134,9 +145,21 @@ impl Voice {
         if glide_s < 0.001 {
             self.current_hz = self.target_hz;
         } else {
-            let coeff = (-1.0 / (glide_s * sample_rate)).exp();
-            self.current_hz += (self.target_hz - self.current_hz) * (1.0 - coeff);
+            let oct_step = (1.0 / glide_s) / sample_rate.max(1.0);
+            let cur = self.current_hz.max(8.0).log2();
+            let tgt = self.target_hz.max(8.0).log2();
+            let diff = tgt - cur;
+            if diff.abs() <= oct_step {
+                self.current_hz = self.target_hz;
+            } else {
+                self.current_hz = 2f32.powf(cur + diff.signum() * oct_step);
+            }
         }
+
+        let pwm_mod = p.lfo * p.lfo_pwm * 0.45;
+        let pwm1 = (p.osc1_pwm + pwm_mod).clamp(0.05, 0.95);
+        let pwm2 = (p.osc2_pwm + pwm_mod).clamp(0.05, 0.95);
+        let vib_oct = p.lfo * p.lfo_pitch * (2.0 / 12.0);
 
         let n = p.unison.clamp(1, MAX_UNISON);
         let mut left = 0.0;
@@ -149,12 +172,13 @@ impl Voice {
                 let t = i as f32 / (n as f32 - 1.0);
                 (t * 2.0 - 1.0) * p.detune_cents
             };
-            let hz = self.current_hz * 2f32.powf(p.osc1_oct as f32 + p.osc1_semi as f32 / 12.0 + det / 1200.0);
+            let hz = self.current_hz
+                * 2f32.powf(p.osc1_oct as f32 + p.osc1_semi as f32 / 12.0 + det / 1200.0 + vib_oct);
             let (dt, wrap) = osc::tick(&mut self.osc1[i], hz, sample_rate);
             if i == 0 {
                 wrapped = wrap;
             }
-            let s = osc::render(p.osc1_wave, self.osc1[i], dt, p.osc1_pwm) * p.osc1_mix;
+            let s = osc::render(p.osc1_wave, self.osc1[i], dt, pwm1) * p.osc1_mix;
             let pan = if n == 1 {
                 0.0
             } else {
@@ -168,12 +192,15 @@ impl Voice {
         left *= norm;
         right *= norm;
 
-        let hz2 = self.current_hz * 2f32.powf(p.osc2_oct as f32 + p.osc2_semi as f32 / 12.0);
+        let hz2 = self.current_hz
+            * 2f32.powf(
+                p.osc2_oct as f32 + p.osc2_semi as f32 / 12.0 + p.osc2_cents / 1200.0 + vib_oct,
+            );
         if p.sync && wrapped {
             self.osc2 = 0.0;
         }
         let (dt2, _) = osc::tick(&mut self.osc2, hz2, sample_rate);
-        let o2 = osc::render(p.osc2_wave, self.osc2, dt2, p.osc2_pwm) * p.osc2_mix;
+        let o2 = osc::render(p.osc2_wave, self.osc2, dt2, pwm2) * p.osc2_mix;
         left += o2 * 0.707;
         right += o2 * 0.707;
 
@@ -188,13 +215,6 @@ impl Voice {
         left += sub * 0.707;
         right += sub * 0.707;
 
-        if p.noise > 0.0001 {
-            self.noise = self.noise.wrapping_mul(1664525).wrapping_add(1013904223);
-            let nse = (self.noise as i32 as f32) * (1.0 / 2_147_483_648.0) * p.noise;
-            left += nse;
-            right += nse;
-        }
-
         let amp = self.amp.tick(sample_rate, p.amp_a, p.amp_d, p.amp_s, p.amp_r);
         let fenv = self.filt.tick(sample_rate, p.filt_a, p.filt_d, p.filt_s, p.filt_r);
         if self.amp.stage == Stage::Off {
@@ -202,17 +222,26 @@ impl Voice {
             return (0.0, 0.0);
         }
 
+        if p.noise > 0.0001 {
+            let nse = self.noise_gen.next(p.noise_kind) * p.noise;
+            left += nse;
+            right += nse;
+        }
+
         let key_oct = (self.note as f32 - 60.0) / 12.0 * p.keytrack;
         let env_oct = fenv * p.filt_env * 8.0;
-        let lfo_oct = p.lfo * 4.0;
+        let lfo_oct = p.lfo * p.lfo_cut * 4.0;
         let cutoff = p.cutoff * 2f32.powf(key_oct + env_oct + lfo_oct);
-        let mono = (left + right) * 0.5;
-        let filtered = self.filter.process_lp(
-            drive(mono, p.drive),
-            cutoff,
-            p.res,
-            sample_rate,
-        );
+        let mono = drive((left + right) * 0.5, p.drive);
+        let (lp, bp, hp) = self.filter.process(mono, cutoff, p.res, sample_rate);
+        let first = Svf::pick(lp, bp, hp, p.filt_mode);
+        let filtered = if p.four_pole {
+            let stage = first.clamp(-2.0, 2.0);
+            let (lp2, bp2, hp2) = self.filter2.process(stage, cutoff, p.res * 0.85, sample_rate);
+            Svf::pick(lp2, bp2, hp2, p.filt_mode)
+        } else {
+            first
+        };
         let g = amp * self.velocity * 0.35;
         let wet = filtered * g;
         // Keep a touch of stereo from unison by using the pre-filter balance.
@@ -242,12 +271,23 @@ impl Engine {
         self.last_hz = 0.0;
     }
 
-    pub fn note_on(&mut self, note: u8, channel: u8, velocity: f32, sample_rate: f32) {
+    pub fn note_on(
+        &mut self,
+        note: u8,
+        channel: u8,
+        velocity: f32,
+        sample_rate: f32,
+        legato: bool,
+    ) {
+        let held = self.voices.iter().any(|v| {
+            v.active && v.amp.stage != Stage::Release && v.amp.stage != Stage::Off
+        });
         let idx = self.alloc();
-        let from = if self.last_hz > 1.0 {
-            self.last_hz
-        } else {
+        let snap = legato && !held;
+        let from = if snap || self.last_hz <= 1.0 {
             osc::midi_hz(note as f32)
+        } else {
+            self.last_hz
         };
         self.voices[idx].start(note, channel, velocity, self.next_age, from, sample_rate);
         self.next_age += 1;

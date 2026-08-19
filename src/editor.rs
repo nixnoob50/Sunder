@@ -6,7 +6,7 @@ use nih_plug_egui::egui::{
 use std::f32::consts::PI;
 use std::sync::Arc;
 
-use crate::params::{SunderParams, WaveChoice};
+use crate::params::{FilterChoice, NoiseChoice, SunderParams, WaveChoice};
 use crate::presets::{self, Category, Preset};
 
 const BG: Color32 = Color32::from_rgb(18, 17, 16);
@@ -141,12 +141,17 @@ fn osc2_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks:
             knob(ui, setter, &params.osc2_pwm, "PWM", ks);
             knob(ui, setter, &params.osc2_oct, "OCT", ks);
             knob(ui, setter, &params.osc2_semi, "SEMI", ks);
+            knob(ui, setter, &params.osc2_cents, "CT", ks);
         });
     });
 }
 
 fn filter_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: f32) {
     panel(ui, "FILTER", |ui| {
+        ui.horizontal(|ui| {
+            filter_picker(ui, setter, &params.filt_mode);
+            latch(ui, setter, &params.four_pole, "4 POLE");
+        });
         knob_row(ui, |ui| {
             knob(ui, setter, &params.cutoff, "CUTOFF", ks + 4.0);
             knob(ui, setter, &params.res, "RES", ks + 4.0);
@@ -170,6 +175,11 @@ fn unison_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, k
             knob(ui, setter, &params.sub_mix, "SUB", ks);
             knob(ui, setter, &params.noise, "NOISE", ks);
             latch(ui, setter, &params.sub_square, "SQ SUB");
+        });
+        ui.add_space(2.0);
+        ui.horizontal(|ui| {
+            ui.label(RichText::new("NOISE").small().color(MUTED));
+            noise_picker(ui, setter, &params.noise_type);
         });
     });
 }
@@ -198,8 +208,13 @@ fn fx_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: f
     panel(ui, "MOD / FX", |ui| {
         knob_row(ui, |ui| {
             knob(ui, setter, &params.lfo_rate, "RATE", ks);
-            knob(ui, setter, &params.lfo_amt, "LFO", ks);
+            knob(ui, setter, &params.lfo_amt, "CUT", ks);
+            knob(ui, setter, &params.lfo_pitch, "PIT", ks);
+            knob(ui, setter, &params.lfo_pwm, "PWM", ks);
+        });
+        ui.horizontal(|ui| {
             knob(ui, setter, &params.glide, "GLIDE", ks);
+            latch(ui, setter, &params.legato, "LEGATO");
         });
         knob_row(ui, |ui| {
             knob(ui, setter, &params.cho_mix, "CHORUS", ks);
@@ -477,6 +492,66 @@ fn wave_picker(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::Enu
             }
         }
     });
+}
+
+fn noise_picker(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::EnumParam<NoiseChoice>) {
+    let current = param.value();
+    let text = match current {
+        NoiseChoice::White => "WHITE",
+        NoiseChoice::Pink => "PINK",
+        NoiseChoice::Brown => "DARK",
+        NoiseChoice::Digital => "DIGI",
+    };
+    egui::ComboBox::from_id_salt("sunder-noise-type")
+        .selected_text(RichText::new(text).small().color(CREAM))
+        .width(88.0)
+        .show_ui(ui, |ui| {
+            for (choice, label) in [
+                (NoiseChoice::White, "WHITE"),
+                (NoiseChoice::Pink, "PINK"),
+                (NoiseChoice::Brown, "DARK"),
+                (NoiseChoice::Digital, "DIGI"),
+            ] {
+                let on = current == choice;
+                if ui
+                    .selectable_label(on, RichText::new(label).small().color(if on { AMBER } else { CREAM }))
+                    .clicked()
+                {
+                    setter.begin_set_parameter(param);
+                    setter.set_parameter(param, choice);
+                    setter.end_set_parameter(param);
+                }
+            }
+        });
+}
+
+fn filter_picker(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::EnumParam<FilterChoice>) {
+    let current = param.value();
+    let text = match current {
+        FilterChoice::Lowpass => "LP",
+        FilterChoice::Bandpass => "BP",
+        FilterChoice::Highpass => "HP",
+    };
+    egui::ComboBox::from_id_salt("sunder-filt-mode")
+        .selected_text(RichText::new(text).small().color(CREAM))
+        .width(64.0)
+        .show_ui(ui, |ui| {
+            for (choice, label) in [
+                (FilterChoice::Lowpass, "LP"),
+                (FilterChoice::Bandpass, "BP"),
+                (FilterChoice::Highpass, "HP"),
+            ] {
+                let on = current == choice;
+                if ui
+                    .selectable_label(on, RichText::new(label).small().color(if on { AMBER } else { CREAM }))
+                    .clicked()
+                {
+                    setter.begin_set_parameter(param);
+                    setter.set_parameter(param, choice);
+                    setter.end_set_parameter(param);
+                }
+            }
+        });
 }
 
 fn latch(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::BoolParam, label: &str) {

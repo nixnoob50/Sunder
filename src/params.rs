@@ -26,6 +26,49 @@ impl WaveChoice {
     }
 }
 
+#[derive(Enum, PartialEq, Eq, Debug, Clone, Copy)]
+pub enum NoiseChoice {
+    #[id = "white"]
+    White,
+    #[id = "pink"]
+    Pink,
+    #[id = "brown"]
+    Brown,
+    #[id = "digi"]
+    Digital,
+}
+
+impl NoiseChoice {
+    pub fn to_kind(self) -> crate::dsp::noise::NoiseKind {
+        match self {
+            Self::White => crate::dsp::noise::NoiseKind::White,
+            Self::Pink => crate::dsp::noise::NoiseKind::Pink,
+            Self::Brown => crate::dsp::noise::NoiseKind::Brown,
+            Self::Digital => crate::dsp::noise::NoiseKind::Digital,
+        }
+    }
+}
+
+#[derive(Enum, PartialEq, Eq, Debug, Clone, Copy)]
+pub enum FilterChoice {
+    #[id = "lp"]
+    Lowpass,
+    #[id = "bp"]
+    Bandpass,
+    #[id = "hp"]
+    Highpass,
+}
+
+impl FilterChoice {
+    pub fn to_mode(self) -> crate::dsp::filter::FilterMode {
+        match self {
+            Self::Lowpass => crate::dsp::filter::FilterMode::Lowpass,
+            Self::Bandpass => crate::dsp::filter::FilterMode::Bandpass,
+            Self::Highpass => crate::dsp::filter::FilterMode::Highpass,
+        }
+    }
+}
+
 #[derive(Params)]
 pub struct SunderParams {
     #[persist = "editor-state"]
@@ -35,6 +78,8 @@ pub struct SunderParams {
     pub gain: FloatParam,
     #[id = "glide"]
     pub glide: FloatParam,
+    #[id = "legato"]
+    pub legato: BoolParam,
 
     #[id = "o1wav"]
     pub osc1_wave: EnumParam<WaveChoice>,
@@ -61,6 +106,8 @@ pub struct SunderParams {
     pub osc2_oct: IntParam,
     #[id = "o2semi"]
     pub osc2_semi: IntParam,
+    #[id = "o2ct"]
+    pub osc2_cents: FloatParam,
     #[id = "o2pwm"]
     pub osc2_pwm: FloatParam,
     #[id = "sync"]
@@ -72,6 +119,8 @@ pub struct SunderParams {
     pub sub_square: BoolParam,
     #[id = "noise"]
     pub noise: FloatParam,
+    #[id = "ntype"]
+    pub noise_type: EnumParam<NoiseChoice>,
 
     #[id = "cut"]
     pub cutoff: FloatParam,
@@ -83,6 +132,10 @@ pub struct SunderParams {
     pub filt_env: FloatParam,
     #[id = "ktrk"]
     pub keytrack: FloatParam,
+    #[id = "fmode"]
+    pub filt_mode: EnumParam<FilterChoice>,
+    #[id = "fpole"]
+    pub four_pole: BoolParam,
 
     #[id = "aatk"]
     pub amp_a: FloatParam,
@@ -106,6 +159,10 @@ pub struct SunderParams {
     pub lfo_rate: FloatParam,
     #[id = "lfoamt"]
     pub lfo_amt: FloatParam,
+    #[id = "lfopit"]
+    pub lfo_pitch: FloatParam,
+    #[id = "lfopwm"]
+    pub lfo_pwm: FloatParam,
 
     #[id = "chmix"]
     pub cho_mix: FloatParam,
@@ -133,6 +190,7 @@ impl Default for SunderParams {
             .with_value_to_string(formatters::v2s_f32_gain_to_db(1))
             .with_string_to_value(formatters::s2v_f32_gain_to_db()),
             glide: ms_param("Glide", 0.0, 0.0, 500.0),
+            legato: BoolParam::new("Legato", false),
             osc1_wave: EnumParam::new("Osc1 Wave", WaveChoice::Saw),
             osc1_mix: unit_param("Osc1 Mix", 0.8),
             osc1_oct: IntParam::new("Osc1 Oct", 0, IntRange::Linear { min: -2, max: 2 }),
@@ -161,6 +219,17 @@ impl Default for SunderParams {
             osc2_mix: unit_param("Osc2 Mix", 0.0),
             osc2_oct: IntParam::new("Osc2 Oct", 0, IntRange::Linear { min: -2, max: 2 }),
             osc2_semi: IntParam::new("Osc2 Semi", 0, IntRange::Linear { min: -12, max: 12 }),
+            osc2_cents: FloatParam::new(
+                "Osc2 Cents",
+                0.0,
+                FloatRange::Linear {
+                    min: -50.0,
+                    max: 50.0,
+                },
+            )
+            .with_smoother(SmoothingStyle::Linear(20.0))
+            .with_step_size(0.1)
+            .with_unit(" ct"),
             osc2_pwm: FloatParam::new(
                 "Osc2 PWM",
                 0.5,
@@ -173,6 +242,7 @@ impl Default for SunderParams {
             sub_mix: unit_param("Sub", 0.25),
             sub_square: BoolParam::new("Sub Square", false),
             noise: unit_param("Noise", 0.0),
+            noise_type: EnumParam::new("Noise Type", NoiseChoice::White),
             cutoff: FloatParam::new(
                 "Cutoff",
                 1200.0,
@@ -199,6 +269,8 @@ impl Default for SunderParams {
             .with_step_size(0.01)
             .with_value_to_string(formatters::v2s_f32_rounded(2)),
             keytrack: unit_param("Keytrack", 0.2),
+            filt_mode: EnumParam::new("Filter Mode", FilterChoice::Lowpass),
+            four_pole: BoolParam::new("4 Pole", false),
             amp_a: ms_param("Amp Atk", 5.0, 0.2, 4000.0),
             amp_d: ms_param("Amp Dec", 120.0, 1.0, 4000.0),
             amp_s: unit_param("Amp Sus", 0.8),
@@ -218,7 +290,9 @@ impl Default for SunderParams {
             )
             .with_smoother(SmoothingStyle::Logarithmic(40.0))
             .with_unit(" Hz"),
-            lfo_amt: unit_param("LFO Amt", 0.0),
+            lfo_amt: unit_param("LFO Cut", 0.0),
+            lfo_pitch: unit_param("LFO Pitch", 0.0),
+            lfo_pwm: unit_param("LFO PWM", 0.0),
             cho_mix: unit_param("Chorus", 0.0),
             cho_rate: FloatParam::new(
                 "Chorus Rate",

@@ -8,7 +8,7 @@ Do **not** rename the product. Do **not** add VST3/LV2, joke UI, macros, dice ro
 
 - Rust, **nih-plug** (git) + **nih-plug-egui** / **egui**
 - CLAP only (`bundler.toml` → `Sunder.clap`)
-- DSP: 8-voice poly, 2 polyBLEP oscs + sub, PWM, hard sync, cheap supersaw (extra phases into **one** filter), driven SVF, amp + filter ADSR, LFO → cutoff, glide, stereo chorus after voice sum
+- DSP: 8-voice poly, 2 polyBLEP oscs + sub, PWM, hard sync, cheap supersaw (extra phases into **one** filter), driven SVF (LP/BP/HP, 2 or 4 pole), amp + filter ADSR, LFO → cutoff / pitch / PWM, legato glide (ms per octave), stereo chorus after voice sum, noise (white / pink / brown / digital LFSR) through the same amp envelope
 - No CUDA; Bitwig handles reverb/delay/EQ
 - User presets: `~/.local/share/sunder/presets/`
 - Factory bank: `presets/factory.json` (embedded at compile time)
@@ -25,7 +25,8 @@ Do **not** rename the product. Do **not** add VST3/LV2, joke UI, macros, dice ro
 
 - Original patch names. Famous bank is **inspired-by** analog/digital characters (Juno, JP-8, DX7, OB-X, etc.), not trademarked factory clones. Songs bank uses `Patch Name - Song Title` for inspired-by record synths.
 - `Category`: Bass, Lead, Pad, Keys, Famous, Songs, Sfx. Adding a category requires `Category::ALL`, `label()`, serde, and factory JSON.
-- Wave indices: `0` saw, `1` square, `2` tri, `3` sine. Osc oct `[-2, 2]`, unison `[1, 5]`.
+- Wave indices: `0` saw, `1` square, `2` tri, `3` sine. Noise types: `0` white, `1` pink, `2` brown, `3` digital. Filter mode: `0` LP, `1` BP, `2` HP. Osc oct `[-2, 2]`, osc 2 cents `[-50, 50]`, unison `[1, 5]`.
+- Glide is **ms per octave** and only slides on overlapping notes when Legato is on.
 - After changing `factory.json`, rebuild — the file is `include_str!`, not loaded from disk at runtime.
 - For bass: keep cutoff low, sub high, `filt_env` modest (env is scaled by ~8 octaves in the voice).
 
