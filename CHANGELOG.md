@@ -2,6 +2,11 @@
 
 All notable changes to Sunder are documented here.
 
+## [0.2.2] — 2026-08-19
+
+### Added
+- Songs factory category with inspired-by patches of well-known record synths (original names plus song titles)
+
 ## [0.2.1] — 2026-08-19
 
 ### Fixed

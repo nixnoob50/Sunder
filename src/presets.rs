@@ -14,16 +14,18 @@ pub enum Category {
     Pad,
     Keys,
     Famous,
+    Songs,
     Sfx,
 }
 
 impl Category {
-    pub const ALL: [Category; 6] = [
+    pub const ALL: [Category; 7] = [
         Category::Bass,
         Category::Lead,
         Category::Pad,
         Category::Keys,
         Category::Famous,
+        Category::Songs,
         Category::Sfx,
     ];
 
@@ -34,6 +36,7 @@ impl Category {
             Self::Pad => "Pad",
             Self::Keys => "Keys",
             Self::Famous => "Famous",
+            Self::Songs => "Songs",
             Self::Sfx => "SFX",
         }
     }

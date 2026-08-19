@@ -23,8 +23,8 @@ Do **not** rename the product. Do **not** add VST3/LV2, joke UI, macros, dice ro
 
 ## Presets
 
-- Original patch names. Famous bank is **inspired-by** analog/digital characters (Juno, JP-8, DX7, OB-X, etc.), not trademarked factory clones.
-- `Category`: Bass, Lead, Pad, Keys, Famous, Sfx. Adding a category requires `Category::ALL`, `label()`, serde, and factory JSON.
+- Original patch names. Famous bank is **inspired-by** analog/digital characters (Juno, JP-8, DX7, OB-X, etc.), not trademarked factory clones. Songs bank uses `Patch Name - Song Title` for inspired-by record synths.
+- `Category`: Bass, Lead, Pad, Keys, Famous, Songs, Sfx. Adding a category requires `Category::ALL`, `label()`, serde, and factory JSON.
 - Wave indices: `0` saw, `1` square, `2` tri, `3` sine. Osc oct `[-2, 2]`, unison `[1, 5]`.
 - After changing `factory.json`, rebuild — the file is `include_str!`, not loaded from disk at runtime.
 - For bass: keep cutoff low, sub high, `filt_env` modest (env is scaled by ~8 octaves in the voice).
