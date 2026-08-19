@@ -3,8 +3,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-use crate::params::{SunderParams, WaveChoice};
+use crate::params::SunderParams;
 use nih_plug::prelude::*;
+use nih_plug::wrapper::state::ParamValue;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Category {
@@ -95,117 +96,102 @@ impl Default for Patch {
 
 pub fn snapshot(p: &SunderParams) -> Patch {
     Patch {
-        gain: p.gain.value(),
-        glide: p.glide.value(),
-        osc1_wave: p.osc1_wave.value().to_index() as i32,
-        osc1_mix: p.osc1_mix.value(),
-        osc1_oct: p.osc1_oct.value(),
-        osc1_semi: p.osc1_semi.value(),
-        osc1_pwm: p.osc1_pwm.value(),
-        unison: p.unison.value(),
-        detune: p.detune.value(),
-        stereo: p.stereo.value(),
-        osc2_wave: p.osc2_wave.value().to_index() as i32,
-        osc2_mix: p.osc2_mix.value(),
-        osc2_oct: p.osc2_oct.value(),
-        osc2_semi: p.osc2_semi.value(),
-        osc2_pwm: p.osc2_pwm.value(),
-        sync: p.sync.value(),
-        sub_mix: p.sub_mix.value(),
-        sub_square: p.sub_square.value(),
-        noise: p.noise.value(),
-        cutoff: p.cutoff.value(),
-        res: p.res.value(),
-        drive: p.drive.value(),
-        filt_env: p.filt_env.value(),
-        keytrack: p.keytrack.value(),
-        amp_a: p.amp_a.value(),
-        amp_d: p.amp_d.value(),
-        amp_s: p.amp_s.value(),
-        amp_r: p.amp_r.value(),
-        filt_a: p.filt_a.value(),
-        filt_d: p.filt_d.value(),
-        filt_s: p.filt_s.value(),
-        filt_r: p.filt_r.value(),
-        lfo_rate: p.lfo_rate.value(),
-        lfo_amt: p.lfo_amt.value(),
-        cho_mix: p.cho_mix.value(),
-        cho_rate: p.cho_rate.value(),
-        cho_depth: p.cho_depth.value(),
+        gain: p.gain.unmodulated_plain_value(),
+        glide: p.glide.unmodulated_plain_value(),
+        osc1_wave: p.osc1_wave.unmodulated_plain_value().to_index() as i32,
+        osc1_mix: p.osc1_mix.unmodulated_plain_value(),
+        osc1_oct: p.osc1_oct.unmodulated_plain_value(),
+        osc1_semi: p.osc1_semi.unmodulated_plain_value(),
+        osc1_pwm: p.osc1_pwm.unmodulated_plain_value(),
+        unison: p.unison.unmodulated_plain_value(),
+        detune: p.detune.unmodulated_plain_value(),
+        stereo: p.stereo.unmodulated_plain_value(),
+        osc2_wave: p.osc2_wave.unmodulated_plain_value().to_index() as i32,
+        osc2_mix: p.osc2_mix.unmodulated_plain_value(),
+        osc2_oct: p.osc2_oct.unmodulated_plain_value(),
+        osc2_semi: p.osc2_semi.unmodulated_plain_value(),
+        osc2_pwm: p.osc2_pwm.unmodulated_plain_value(),
+        sync: p.sync.unmodulated_plain_value(),
+        sub_mix: p.sub_mix.unmodulated_plain_value(),
+        sub_square: p.sub_square.unmodulated_plain_value(),
+        noise: p.noise.unmodulated_plain_value(),
+        cutoff: p.cutoff.unmodulated_plain_value(),
+        res: p.res.unmodulated_plain_value(),
+        drive: p.drive.unmodulated_plain_value(),
+        filt_env: p.filt_env.unmodulated_plain_value(),
+        keytrack: p.keytrack.unmodulated_plain_value(),
+        amp_a: p.amp_a.unmodulated_plain_value(),
+        amp_d: p.amp_d.unmodulated_plain_value(),
+        amp_s: p.amp_s.unmodulated_plain_value(),
+        amp_r: p.amp_r.unmodulated_plain_value(),
+        filt_a: p.filt_a.unmodulated_plain_value(),
+        filt_d: p.filt_d.unmodulated_plain_value(),
+        filt_s: p.filt_s.unmodulated_plain_value(),
+        filt_r: p.filt_r.unmodulated_plain_value(),
+        lfo_rate: p.lfo_rate.unmodulated_plain_value(),
+        lfo_amt: p.lfo_amt.unmodulated_plain_value(),
+        cho_mix: p.cho_mix.unmodulated_plain_value(),
+        cho_rate: p.cho_rate.unmodulated_plain_value(),
+        cho_depth: p.cho_depth.unmodulated_plain_value(),
     }
 }
 
-pub fn apply(p: &SunderParams, setter: &ParamSetter, patch: &Patch) {
-    set_f(setter, &p.gain, patch.gain);
-    set_f(setter, &p.glide, patch.glide);
-    set_enum(setter, &p.osc1_wave, wave_from_i(patch.osc1_wave));
-    set_f(setter, &p.osc1_mix, patch.osc1_mix);
-    set_i(setter, &p.osc1_oct, patch.osc1_oct);
-    set_i(setter, &p.osc1_semi, patch.osc1_semi);
-    set_f(setter, &p.osc1_pwm, patch.osc1_pwm);
-    set_i(setter, &p.unison, patch.unison);
-    set_f(setter, &p.detune, patch.detune);
-    set_f(setter, &p.stereo, patch.stereo);
-    set_enum(setter, &p.osc2_wave, wave_from_i(patch.osc2_wave));
-    set_f(setter, &p.osc2_mix, patch.osc2_mix);
-    set_i(setter, &p.osc2_oct, patch.osc2_oct);
-    set_i(setter, &p.osc2_semi, patch.osc2_semi);
-    set_f(setter, &p.osc2_pwm, patch.osc2_pwm);
-    set_b(setter, &p.sync, patch.sync);
-    set_f(setter, &p.sub_mix, patch.sub_mix);
-    set_b(setter, &p.sub_square, patch.sub_square);
-    set_f(setter, &p.noise, patch.noise);
-    set_f(setter, &p.cutoff, patch.cutoff);
-    set_f(setter, &p.res, patch.res);
-    set_f(setter, &p.drive, patch.drive);
-    set_f(setter, &p.filt_env, patch.filt_env);
-    set_f(setter, &p.keytrack, patch.keytrack);
-    set_f(setter, &p.amp_a, patch.amp_a);
-    set_f(setter, &p.amp_d, patch.amp_d);
-    set_f(setter, &p.amp_s, patch.amp_s);
-    set_f(setter, &p.amp_r, patch.amp_r);
-    set_f(setter, &p.filt_a, patch.filt_a);
-    set_f(setter, &p.filt_d, patch.filt_d);
-    set_f(setter, &p.filt_s, patch.filt_s);
-    set_f(setter, &p.filt_r, patch.filt_r);
-    set_f(setter, &p.lfo_rate, patch.lfo_rate);
-    set_f(setter, &p.lfo_amt, patch.lfo_amt);
-    set_f(setter, &p.cho_mix, patch.cho_mix);
-    set_f(setter, &p.cho_rate, patch.cho_rate);
-    set_f(setter, &p.cho_depth, patch.cho_depth);
+/// Restore a factory/user patch via plugin state, not GUI automation gestures.
+/// Bitwig treats begin/end-set as the user grabbing knobs, which disables automation lanes.
+pub fn apply(setter: &ParamSetter, patch: &Patch) {
+    let mut state = setter.raw_context.get_state();
+    write_patch(&mut state, patch);
+    setter.raw_context.set_state(state);
 }
 
-fn wave_from_i(i: i32) -> WaveChoice {
+fn write_patch(state: &mut PluginState, patch: &Patch) {
+    let p = &mut state.params;
+    p.insert("gain".into(), ParamValue::F32(patch.gain));
+    p.insert("glide".into(), ParamValue::F32(patch.glide));
+    p.insert("o1wav".into(), ParamValue::String(wave_id(patch.osc1_wave).into()));
+    p.insert("o1mix".into(), ParamValue::F32(patch.osc1_mix));
+    p.insert("o1oct".into(), ParamValue::I32(patch.osc1_oct));
+    p.insert("o1semi".into(), ParamValue::I32(patch.osc1_semi));
+    p.insert("o1pwm".into(), ParamValue::F32(patch.osc1_pwm));
+    p.insert("uni".into(), ParamValue::I32(patch.unison));
+    p.insert("udet".into(), ParamValue::F32(patch.detune));
+    p.insert("usprd".into(), ParamValue::F32(patch.stereo));
+    p.insert("o2wav".into(), ParamValue::String(wave_id(patch.osc2_wave).into()));
+    p.insert("o2mix".into(), ParamValue::F32(patch.osc2_mix));
+    p.insert("o2oct".into(), ParamValue::I32(patch.osc2_oct));
+    p.insert("o2semi".into(), ParamValue::I32(patch.osc2_semi));
+    p.insert("o2pwm".into(), ParamValue::F32(patch.osc2_pwm));
+    p.insert("sync".into(), ParamValue::Bool(patch.sync));
+    p.insert("sub".into(), ParamValue::F32(patch.sub_mix));
+    p.insert("subsq".into(), ParamValue::Bool(patch.sub_square));
+    p.insert("noise".into(), ParamValue::F32(patch.noise));
+    p.insert("cut".into(), ParamValue::F32(patch.cutoff));
+    p.insert("res".into(), ParamValue::F32(patch.res));
+    p.insert("drv".into(), ParamValue::F32(patch.drive));
+    p.insert("fenv".into(), ParamValue::F32(patch.filt_env));
+    p.insert("ktrk".into(), ParamValue::F32(patch.keytrack));
+    p.insert("aatk".into(), ParamValue::F32(patch.amp_a));
+    p.insert("adec".into(), ParamValue::F32(patch.amp_d));
+    p.insert("asus".into(), ParamValue::F32(patch.amp_s));
+    p.insert("arel".into(), ParamValue::F32(patch.amp_r));
+    p.insert("fatk".into(), ParamValue::F32(patch.filt_a));
+    p.insert("fdec".into(), ParamValue::F32(patch.filt_d));
+    p.insert("fsus".into(), ParamValue::F32(patch.filt_s));
+    p.insert("frel".into(), ParamValue::F32(patch.filt_r));
+    p.insert("lfohz".into(), ParamValue::F32(patch.lfo_rate));
+    p.insert("lfoamt".into(), ParamValue::F32(patch.lfo_amt));
+    p.insert("chmix".into(), ParamValue::F32(patch.cho_mix));
+    p.insert("chrate".into(), ParamValue::F32(patch.cho_rate));
+    p.insert("chdpth".into(), ParamValue::F32(patch.cho_depth));
+}
+
+fn wave_id(i: i32) -> &'static str {
     match i {
-        1 => WaveChoice::Square,
-        2 => WaveChoice::Triangle,
-        3 => WaveChoice::Sine,
-        _ => WaveChoice::Saw,
+        1 => "square",
+        2 => "tri",
+        3 => "sine",
+        _ => "saw",
     }
-}
-
-fn set_f(setter: &ParamSetter, param: &FloatParam, value: f32) {
-    setter.begin_set_parameter(param);
-    setter.set_parameter(param, value);
-    setter.end_set_parameter(param);
-}
-
-fn set_i(setter: &ParamSetter, param: &IntParam, value: i32) {
-    setter.begin_set_parameter(param);
-    setter.set_parameter(param, value);
-    setter.end_set_parameter(param);
-}
-
-fn set_b(setter: &ParamSetter, param: &BoolParam, value: bool) {
-    setter.begin_set_parameter(param);
-    setter.set_parameter(param, value);
-    setter.end_set_parameter(param);
-}
-
-fn set_enum(setter: &ParamSetter, param: &EnumParam<WaveChoice>, value: WaveChoice) {
-    setter.begin_set_parameter(param);
-    setter.set_parameter(param, value);
-    setter.end_set_parameter(param);
 }
 
 pub fn user_dir() -> PathBuf {

@@ -389,7 +389,7 @@ fn preset_browser(
                                             .map(|p| p.params.clone())
                                     };
                                     if let Some(patch) = patch {
-                                        presets::apply(params, setter, &patch);
+                                        presets::apply(setter, &patch);
                                         state.status = format!("Loaded {name}");
                                     }
                                 }
