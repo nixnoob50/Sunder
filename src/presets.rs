@@ -13,17 +13,27 @@ pub enum Category {
     Lead,
     Pad,
     Keys,
+    Organ,
+    Brass,
+    Strings,
+    Plucks,
+    Bells,
     Famous,
     Songs,
     Sfx,
 }
 
 impl Category {
-    pub const ALL: [Category; 7] = [
+    pub const ALL: [Category; 12] = [
         Category::Bass,
         Category::Lead,
         Category::Pad,
         Category::Keys,
+        Category::Organ,
+        Category::Brass,
+        Category::Strings,
+        Category::Plucks,
+        Category::Bells,
         Category::Famous,
         Category::Songs,
         Category::Sfx,
@@ -35,6 +45,11 @@ impl Category {
             Self::Lead => "Lead",
             Self::Pad => "Pad",
             Self::Keys => "Keys",
+            Self::Organ => "Organ",
+            Self::Brass => "Brass",
+            Self::Strings => "Strings",
+            Self::Plucks => "Plucks",
+            Self::Bells => "Bells",
             Self::Famous => "Famous",
             Self::Songs => "Songs",
             Self::Sfx => "SFX",
@@ -91,6 +106,8 @@ pub struct Patch {
     pub filt_d: f32,
     pub filt_s: f32,
     pub filt_r: f32,
+    #[serde(default)]
+    pub pitch_env: f32,
     pub lfo_rate: f32,
     pub lfo_amt: f32,
     #[serde(default)]
@@ -149,6 +166,7 @@ pub fn snapshot(p: &SunderParams) -> Patch {
         filt_d: p.filt_d.unmodulated_plain_value(),
         filt_s: p.filt_s.unmodulated_plain_value(),
         filt_r: p.filt_r.unmodulated_plain_value(),
+        pitch_env: p.pitch_env.unmodulated_plain_value(),
         lfo_rate: p.lfo_rate.unmodulated_plain_value(),
         lfo_amt: p.lfo_amt.unmodulated_plain_value(),
         lfo_pitch: p.lfo_pitch.unmodulated_plain_value(),
@@ -207,6 +225,7 @@ fn write_patch(state: &mut PluginState, patch: &Patch) {
     p.insert("fdec".into(), ParamValue::F32(patch.filt_d));
     p.insert("fsus".into(), ParamValue::F32(patch.filt_s));
     p.insert("frel".into(), ParamValue::F32(patch.filt_r));
+    p.insert("penv".into(), ParamValue::F32(patch.pitch_env));
     p.insert("lfohz".into(), ParamValue::F32(patch.lfo_rate));
     p.insert("lfoamt".into(), ParamValue::F32(patch.lfo_amt));
     p.insert("lfopit".into(), ParamValue::F32(patch.lfo_pitch));

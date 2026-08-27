@@ -2,6 +2,79 @@
 
 All notable changes to Sunder are documented here.
 
+## [0.5.1] — 2026-08-26
+
+### Fixed
+- Factory patches that were silent or near-silent from filter settings: high-cut HPs lowered (e.g. D50 Airbells, CZ Phase Lead, PPG Grit), HP 4-pole disabled, ultra-dark LPs opened (Soft Sub / Sine Weight / etc.)
+
+## [0.5.0] — 2026-08-20
+
+### Removed
+- Drums factory category (and drum-only voice hacks: beater click, parallel sub thump)
+
+### Added
+- Brass factory category (30 patches) — saw + filter-env brass/horns/sections
+
+### Changed
+- Organ factory bank retuned: drawbar-style sine stacks, full sustain, leslie via chorus, percussion click
+
+## [0.4.10] — 2026-08-20
+
+### Changed
+- Stronger drums: ~8 ms beater click (independent of amp body), parallel sub thump under the filter for pitched hits, higher makeup when P.ENV is used
+- Kick factory patches nudged hotter (sub, click noise, gain)
+
+## [0.4.9] — 2026-08-20
+
+### Fixed
+- Pitch envelope now starts at peak on note-on and falls exponentially (was rising with filter attack, then falling too slowly — kicks whooped instead of thumping)
+
+### Changed
+- Drums bank retuned: short pitch snaps (~25–55 ms), longer amp bodies, louder kicks, tighter noise hats/snares
+
+## [0.4.8] — 2026-08-20
+
+### Added
+- Pitch envelope (P.ENV): filter ADSR also sweeps oscillator pitch in octaves — needed for kicks/toms
+
+### Changed
+- Drums factory bank retuned as true one-shots (pitch drop, noise hats/snares, zero sustain, keytrack off)
+
+## [0.4.7] — 2026-08-20
+
+### Added
+- Factory categories Organ and Drums (30 patches each)
+
+## [0.4.6] — 2026-08-20
+
+### Fixed
+- Preset sidebar Save/Del and name field stay inside the window (pinned footer; list uses leftover height)
+
+## [0.4.5] — 2026-08-20
+
+### Changed
+- Loaded preset name is centered in the title bar; removed from under the preset list
+- Preset categories are shown in two columns; Save/Del and the name field stay visible below the list
+- Mouse wheel over a dial steps one value per notch (Voices 1→2, not 1→5)
+
+## [0.4.4] — 2026-08-20
+
+### Added
+- Factory categories Strings, Plucks, and Bells (30 patches each)
+- Extra factory patches so every category has at least 30 unique presets
+
+## [0.4.3] — 2026-08-20
+
+### Fixed
+- Bandpass is gain-compensated so switching LP→BP no longer collapses the level
+- 4-pole no longer cascades BP→BP (that stacked filter was nearly silent)
+- A few BP / dark bass Songs and Famous patches opened up so they stay usable
+- Mouse wheel over a knob adjusts the dial without scrolling the module pane
+
+### Changed
+- Denser module layout: larger knobs that fill the column, packed rows, tighter margins
+- Module pairs use explicit widths instead of nested `ui.columns` (fixes overlapping panels and clipped knob labels)
+
 ## [0.4.2] — 2026-08-19
 
 ### Fixed

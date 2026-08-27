@@ -71,7 +71,7 @@ impl Plugin for Sunder {
             },
             move |egui_ctx, setter, state| {
                 ResizableWindow::new("sunder-window")
-                    .min_size(egui::vec2(520.0, 420.0))
+                    .min_size(egui::vec2(500.0, 400.0))
                     .show(egui_ctx, egui_state.as_ref(), |ui| {
                         ui.visuals_mut().panel_fill = egui::Color32::from_rgb(18, 17, 16);
                         editor::draw(ui, &params, setter, state);
@@ -183,6 +183,7 @@ impl Plugin for Sunder {
                 filt_d: self.params.filt_d.value(),
                 filt_s: self.params.filt_s.smoothed.next(),
                 filt_r: self.params.filt_r.value(),
+                pitch_env: self.params.pitch_env.value(),
                 lfo,
                 lfo_cut: self.params.lfo_amt.smoothed.next(),
                 lfo_pitch: self.params.lfo_pitch.smoothed.next(),

@@ -36,6 +36,8 @@ pub struct VoiceParams {
     pub keytrack: f32,
     pub filt_mode: FilterMode,
     pub four_pole: bool,
+    /// Pitch sweep in octaves from the filter envelope (drums / zaps).
+    pub pitch_env: f32,
     pub amp_a: f32,
     pub amp_d: f32,
     pub amp_s: f32,
@@ -68,6 +70,8 @@ pub struct Voice {
     filter2: Svf,
     amp: Adsr,
     filt: Adsr,
+    /// Decay-from-peak level for `pitch_env` (1 on note-on).
+    pitch_env_level: f32,
 }
 
 impl Default for Voice {
@@ -88,6 +92,7 @@ impl Default for Voice {
             filter2: Svf::default(),
             amp: Adsr::default(),
             filt: Adsr::default(),
+            pitch_env_level: 0.0,
         }
     }
 }
@@ -124,6 +129,7 @@ impl Voice {
         self.filter2.reset();
         self.amp.note_on();
         self.filt.note_on();
+        self.pitch_env_level = 1.0;
         let _ = sample_rate;
     }
 
@@ -161,6 +167,23 @@ impl Voice {
         let pwm2 = (p.osc2_pwm + pwm_mod).clamp(0.05, 0.95);
         let vib_oct = p.lfo * p.lfo_pitch * (2.0 / 12.0);
 
+        let fenv = self.filt.tick(sample_rate, p.filt_a, p.filt_d, p.filt_s, p.filt_r);
+
+        // Pitch env: peak on note-on, exponential fall using filter decay time.
+        // (Sharing filt ADSR made kicks whoop up first, then fall too slowly.)
+        let pitch_oct = if p.pitch_env > 0.0001 {
+            let tau_s = (p.filt_d.max(8.0) / 1000.0) / 3.5;
+            let coeff = (-1.0 / (sample_rate.max(1.0) * tau_s.max(1.0e-4))).exp();
+            self.pitch_env_level *= coeff;
+            if self.pitch_env_level < 1.0e-4 {
+                self.pitch_env_level = 0.0;
+            }
+            self.pitch_env_level * p.pitch_env
+        } else {
+            self.pitch_env_level = 0.0;
+            0.0
+        };
+
         let n = p.unison.clamp(1, MAX_UNISON);
         let mut left = 0.0;
         let mut right = 0.0;
@@ -173,7 +196,13 @@ impl Voice {
                 (t * 2.0 - 1.0) * p.detune_cents
             };
             let hz = self.current_hz
-                * 2f32.powf(p.osc1_oct as f32 + p.osc1_semi as f32 / 12.0 + det / 1200.0 + vib_oct);
+                * 2f32.powf(
+                    p.osc1_oct as f32
+                        + p.osc1_semi as f32 / 12.0
+                        + det / 1200.0
+                        + vib_oct
+                        + pitch_oct,
+                );
             let (dt, wrap) = osc::tick(&mut self.osc1[i], hz, sample_rate);
             if i == 0 {
                 wrapped = wrap;
@@ -194,7 +223,11 @@ impl Voice {
 
         let hz2 = self.current_hz
             * 2f32.powf(
-                p.osc2_oct as f32 + p.osc2_semi as f32 / 12.0 + p.osc2_cents / 1200.0 + vib_oct,
+                p.osc2_oct as f32
+                    + p.osc2_semi as f32 / 12.0
+                    + p.osc2_cents / 1200.0
+                    + vib_oct
+                    + pitch_oct,
             );
         if p.sync && wrapped {
             self.osc2 = 0.0;
@@ -204,7 +237,7 @@ impl Voice {
         left += o2 * 0.707;
         right += o2 * 0.707;
 
-        let sub_hz = self.current_hz * 0.5;
+        let sub_hz = self.current_hz * 0.5 * 2f32.powf(pitch_oct);
         let (dts, _) = osc::tick(&mut self.sub, sub_hz, sample_rate);
         let sub_wave = if p.sub_square {
             Wave::Square
@@ -216,7 +249,6 @@ impl Voice {
         right += sub * 0.707;
 
         let amp = self.amp.tick(sample_rate, p.amp_a, p.amp_d, p.amp_s, p.amp_r);
-        let fenv = self.filt.tick(sample_rate, p.filt_a, p.filt_d, p.filt_s, p.filt_r);
         if self.amp.stage == Stage::Off {
             self.active = false;
             return (0.0, 0.0);
@@ -235,7 +267,9 @@ impl Voice {
         let mono = drive((left + right) * 0.5, p.drive);
         let (lp, bp, hp) = self.filter.process(mono, cutoff, p.res, sample_rate);
         let first = Svf::pick(lp, bp, hp, p.filt_mode);
-        let filtered = if p.four_pole {
+        // 4-pole = cascade two stages for LP/HP. Cascading BP→BP at the same
+        // cutoff is nearly silent, so bandpass stays a single stage.
+        let filtered = if p.four_pole && p.filt_mode != FilterMode::Bandpass {
             let stage = first.clamp(-2.0, 2.0);
             let (lp2, bp2, hp2) = self.filter2.process(stage, cutoff, p.res * 0.85, sample_rate);
             Svf::pick(lp2, bp2, hp2, p.filt_mode)

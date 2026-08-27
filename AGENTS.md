@@ -8,15 +8,19 @@ Do **not** rename the product. Do **not** add VST3/LV2, joke UI, macros, dice ro
 
 - Rust, **nih-plug** (git) + **nih-plug-egui** / **egui**
 - CLAP only (`bundler.toml` → `Sunder.clap`)
-- DSP: 8-voice poly, 2 polyBLEP oscs + sub, PWM, hard sync, cheap supersaw (extra phases into **one** filter), driven SVF (LP/BP/HP, 2 or 4 pole), amp + filter ADSR, LFO → cutoff / pitch / PWM, legato glide (ms per octave), stereo chorus after voice sum, noise (white / pink / brown / digital LFSR) through the same amp envelope
+- DSP: 8-voice poly, 2 polyBLEP oscs + sub, PWM, hard sync, cheap supersaw (extra phases into **one** filter), driven SVF (LP/BP/HP, 2 or 4 pole), amp + filter ADSR, pitch envelope (`pitch_env`), LFO → cutoff / pitch / PWM, legato glide (ms per octave), stereo chorus after voice sum, noise (white / pink / brown / digital LFSR) through the same amp envelope
+- Pitch envelope (**P.ENV**): on note-on pitch starts high and falls exponentially; fall time follows **Filter Decay** (zaps / sweeps).
 - No CUDA; Bitwig handles reverb/delay/EQ
 - User presets: `~/.local/share/sunder/presets/`
 - Factory bank: `presets/factory.json` (embedded at compile time)
 
 ## Layout rules (`src/editor.rs`)
 
-- Preset column is a **fixed ~176px** width. Module panels use **leftover width only**.
-- Prefer `ui.columns` or a single stacked column. Do **not** use `egui::Grid` plus `set_clip_rect` for modules — that draws empty frames and clips titles off the right edge.
+- Preset column is a **fixed ~168px** width. Module panels use **leftover width only**.
+- Category chips sit in **two columns** at the top of the preset sidebar. Save/Del and the name field are a **pinned footer** (bottom-up layout); the preset list only uses leftover height.
+- The loaded preset name is shown **centered in the title bar**, not under the preset list.
+- Prefer side-by-side modules via explicit half-width verticals (`module_pair`). Do **not** use nested `ui.columns` or `egui::Grid` plus `set_clip_rect` for modules — those overlap frames and clip knob labels.
+- Pack knobs to fill column width (size from ~4.5 slots); keep filter/env/fx rows dense rather than leaving empty panel right sides.
 - Do not size the modules pane with `available_width()` *inside* a horizontal layout if that still reports the full window width. Measure leftover width from the parent rect first.
 - Header Gain lives in a small LTR box beside the knob (label + dB), not floating below.
 - Click a preset name to load. No Load button. Factory is read-only; Save/Delete is for user patches.
@@ -24,7 +28,7 @@ Do **not** rename the product. Do **not** add VST3/LV2, joke UI, macros, dice ro
 ## Presets
 
 - Original patch names. Famous bank is **inspired-by** analog/digital characters (Juno, JP-8, DX7, OB-X, etc.), not trademarked factory clones. Songs bank uses `Patch Name - Song Title` for inspired-by record synths.
-- `Category`: Bass, Lead, Pad, Keys, Famous, Songs, Sfx. Adding a category requires `Category::ALL`, `label()`, serde, and factory JSON.
+- `Category`: Bass, Lead, Pad, Keys, Organ, Brass, Strings, Plucks, Bells, Famous, Songs, Sfx. Adding a category requires `Category::ALL`, `label()`, serde, and factory JSON.
 - Wave indices: `0` saw, `1` square, `2` tri, `3` sine. Noise types: `0` white, `1` pink, `2` brown, `3` digital. Filter mode: `0` LP, `1` BP, `2` HP. Osc oct `[-2, 2]`, osc 2 cents `[-50, 50]`, unison `[1, 5]`.
 - Glide is **ms per octave** and only slides on overlapping notes when Legato is on.
 - After changing `factory.json`, rebuild — the file is `include_str!`, not loaded from disk at runtime.

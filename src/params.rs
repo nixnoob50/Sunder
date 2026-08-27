@@ -154,6 +154,8 @@ pub struct SunderParams {
     pub filt_s: FloatParam,
     #[id = "frel"]
     pub filt_r: FloatParam,
+    #[id = "penv"]
+    pub pitch_env: FloatParam,
 
     #[id = "lfohz"]
     pub lfo_rate: FloatParam,
@@ -175,7 +177,7 @@ pub struct SunderParams {
 impl Default for SunderParams {
     fn default() -> Self {
         Self {
-            editor_state: nih_plug_egui::EguiState::from_size(860, 640),
+            editor_state: nih_plug_egui::EguiState::from_size(820, 560),
             gain: FloatParam::new(
                 "Gain",
                 util::db_to_gain(-6.0),
@@ -279,6 +281,17 @@ impl Default for SunderParams {
             filt_d: ms_param("Filt Dec", 180.0, 1.0, 4000.0),
             filt_s: unit_param("Filt Sus", 0.35),
             filt_r: ms_param("Filt Rel", 220.0, 1.0, 6000.0),
+            pitch_env: FloatParam::new(
+                "Pitch Env",
+                0.0,
+                FloatRange::Linear {
+                    min: 0.0,
+                    max: 2.0,
+                },
+            )
+            .with_step_size(0.01)
+            .with_unit(" oct")
+            .with_value_to_string(formatters::v2s_f32_rounded(2)),
             lfo_rate: FloatParam::new(
                 "LFO Rate",
                 0.4,

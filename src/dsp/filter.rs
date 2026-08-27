@@ -19,7 +19,8 @@ impl Svf {
         self.ic2eq = 0.0;
     }
 
-    /// Returns `(low, band, high)`.
+    /// Returns `(low, band, high)`. Band is gain-compensated so switching
+    /// LP→BP at the same cutoff does not collapse the level.
     pub fn process(&mut self, input: f32, cutoff_hz: f32, res: f32, sample_rate: f32) -> (f32, f32, f32) {
         let sr = sample_rate.max(1.0);
         // Keep g = tan(pi f/sr) well away from the pole at Nyquist. Filter-env
@@ -50,7 +51,8 @@ impl Svf {
         }
 
         let lp = v2.clamp(-4.0, 4.0);
-        let bp = v1.clamp(-4.0, 4.0);
+        // Raw SVF band is quieter than LP at the same cutoff; boost by ~1/k.
+        let bp = (v1 * (2.0 / k.max(0.25))).clamp(-4.0, 4.0);
         let hp = (input - k * v1 - v2).clamp(-4.0, 4.0);
         (lp, bp, hp)
     }

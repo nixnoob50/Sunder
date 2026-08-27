@@ -1,7 +1,7 @@
 use nih_plug::prelude::{Param, ParamSetter};
 use nih_plug_egui::egui::{
-    self, epaint::PathStroke, pos2, vec2, Color32, CornerRadius, FontId, Pos2, Rect, RichText,
-    Sense, Stroke, StrokeKind, Ui,
+    self, epaint::PathStroke, pos2, vec2, Align2, Color32, CornerRadius, FontId, Pos2, Rect,
+    RichText, Sense, Stroke, StrokeKind, Ui,
 };
 use std::f32::consts::PI;
 use std::sync::Arc;
@@ -25,6 +25,8 @@ const KNOB_TOP: Color32 = Color32::from_rgb(72, 68, 64);
 pub struct GuiState {
     category: Category,
     selected: usize,
+    /// Name of the last loaded or saved patch (shown in the title bar).
+    loaded_name: String,
     save_name: String,
     status: String,
     user: Vec<Preset>,
@@ -35,6 +37,7 @@ impl Default for GuiState {
         Self {
             category: Category::Bass,
             selected: 0,
+            loaded_name: String::new(),
             save_name: String::new(),
             status: String::new(),
             user: presets::load_user_presets(),
@@ -50,32 +53,31 @@ pub fn draw(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, state
     ui.visuals_mut().widgets.active.bg_fill = AMBER_DIM;
     ui.visuals_mut().selection.bg_fill = AMBER.linear_multiply(0.35);
     ui.visuals_mut().widgets.inactive.fg_stroke = Stroke::new(1.0, MUTED);
-    ui.spacing_mut().item_spacing = vec2(8.0, 8.0);
+    ui.spacing_mut().item_spacing = vec2(4.0, 4.0);
 
-    header(ui, params, setter);
-    ui.add_space(4.0);
+    header(ui, params, setter, &state.loaded_name);
+    ui.add_space(2.0);
 
     let body = ui.available_rect_before_wrap();
-    let preset_w = 176.0;
-    let mods_w = (body.width() - preset_w - 8.0).max(200.0);
+    let preset_w = 168.0;
+    let mods_w = (body.width() - preset_w - 6.0).max(200.0);
     let body_h = body.height();
 
     ui.horizontal_top(|ui| {
         ui.set_max_width(body.width());
+        ui.spacing_mut().item_spacing = vec2(6.0, 4.0);
 
-        ui.vertical(|ui| {
-            ui.set_width(preset_w);
-            ui.set_max_width(preset_w);
-            panel(ui, "PRESETS", |ui| {
-                preset_browser(
-                    ui,
-                    params,
-                    setter,
-                    state,
-                    (body_h - 40.0).clamp(120.0, 520.0),
-                );
-            });
-        });
+        // Exact body height so the presets panel cannot grow past the window and clip Save/Del.
+        ui.allocate_ui_with_layout(
+            vec2(preset_w, body_h),
+            egui::Layout::top_down(egui::Align::Min),
+            |ui| {
+                ui.set_width(preset_w);
+                ui.set_max_width(preset_w);
+                ui.set_clip_rect(ui.max_rect());
+                presets_panel(ui, params, setter, state);
+            },
+        );
 
         ui.vertical(|ui| {
             ui.set_width(mods_w);
@@ -87,22 +89,32 @@ pub fn draw(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, state
                 .show(ui, |ui| {
                     ui.set_width(mods_w);
                     ui.set_max_width(mods_w);
-                    let two_col = mods_w >= 560.0;
-                    let col_w = if two_col { (mods_w - 10.0) * 0.5 } else { mods_w };
-                    let ks = ((col_w - 24.0) / 4.2).clamp(28.0, 44.0);
+                    ui.spacing_mut().item_spacing = vec2(4.0, 4.0);
+                    let two_col = mods_w >= 520.0;
+                    let gap = 6.0;
+                    let col_w = if two_col {
+                        ((mods_w - gap) * 0.5).max(160.0)
+                    } else {
+                        mods_w
+                    };
+                    // Size knobs to fill ~4.5 slots so short rows do not leave a big empty right side.
+                    let ks = ((col_w - 14.0) / 4.5).clamp(28.0, 48.0);
 
                     if two_col {
-                        ui.columns(2, |cols| {
-                            osc1_panel(&mut cols[0], params, setter, ks);
-                            osc2_panel(&mut cols[1], params, setter, ks);
+                        module_pair(ui, gap, col_w, |ui| {
+                            osc1_panel(ui, params, setter, ks);
+                        }, |ui| {
+                            osc2_panel(ui, params, setter, ks);
                         });
-                        ui.columns(2, |cols| {
-                            filter_panel(&mut cols[0], params, setter, ks);
-                            unison_panel(&mut cols[1], params, setter, ks);
+                        module_pair(ui, gap, col_w, |ui| {
+                            filter_panel(ui, params, setter, ks);
+                        }, |ui| {
+                            unison_panel(ui, params, setter, ks);
                         });
-                        ui.columns(2, |cols| {
-                            env_panel(&mut cols[0], params, setter, ks);
-                            fx_panel(&mut cols[1], params, setter, ks);
+                        module_pair(ui, gap, col_w, |ui| {
+                            env_panel(ui, params, setter, ks);
+                        }, |ui| {
+                            fx_panel(ui, params, setter, ks);
                         });
                     } else {
                         osc1_panel(ui, params, setter, ks);
@@ -120,7 +132,6 @@ pub fn draw(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, state
 fn osc1_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: f32) {
     panel(ui, "OSCILLATOR 1", |ui| {
         wave_picker(ui, setter, &params.osc1_wave);
-        ui.add_space(4.0);
         knob_row(ui, |ui| {
             knob(ui, setter, &params.osc1_mix, "MIX", ks);
             knob(ui, setter, &params.osc1_pwm, "PWM", ks);
@@ -133,6 +144,7 @@ fn osc1_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks:
 fn osc2_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: f32) {
     panel(ui, "OSCILLATOR 2", |ui| {
         ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 4.0;
             wave_picker(ui, setter, &params.osc2_wave);
             latch(ui, setter, &params.sync, "SYNC");
         });
@@ -149,15 +161,14 @@ fn osc2_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks:
 fn filter_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: f32) {
     panel(ui, "FILTER", |ui| {
         ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 4.0;
             filter_picker(ui, setter, &params.filt_mode);
             latch(ui, setter, &params.four_pole, "4 POLE");
         });
         knob_row(ui, |ui| {
-            knob(ui, setter, &params.cutoff, "CUTOFF", ks + 4.0);
-            knob(ui, setter, &params.res, "RES", ks + 4.0);
-            knob(ui, setter, &params.drive, "DRIVE", ks + 4.0);
-        });
-        knob_row(ui, |ui| {
+            knob(ui, setter, &params.cutoff, "CUTOFF", ks);
+            knob(ui, setter, &params.res, "RES", ks);
+            knob(ui, setter, &params.drive, "DRIVE", ks);
             knob(ui, setter, &params.filt_env, "ENV", ks);
             knob(ui, setter, &params.keytrack, "KEY", ks);
         });
@@ -170,13 +181,10 @@ fn unison_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, k
             knob(ui, setter, &params.unison, "VOICES", ks);
             knob(ui, setter, &params.detune, "DETUNE", ks);
             knob(ui, setter, &params.stereo, "WIDTH", ks);
-        });
-        knob_row(ui, |ui| {
             knob(ui, setter, &params.sub_mix, "SUB", ks);
             knob(ui, setter, &params.noise, "NOISE", ks);
             latch(ui, setter, &params.sub_square, "SQ SUB");
         });
-        ui.add_space(2.0);
         ui.horizontal(|ui| {
             ui.label(RichText::new("NOISE").small().color(MUTED));
             noise_picker(ui, setter, &params.noise_type);
@@ -185,8 +193,9 @@ fn unison_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, k
 }
 
 fn env_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: f32) {
-    let k = ks - 2.0;
+    let k = (ks - 4.0).max(26.0);
     panel(ui, "ENVELOPES", |ui| {
+        // Stacked (not nested columns) so labels stay visible and panels do not overlap.
         ui.label(RichText::new("AMP").small().color(MUTED));
         knob_row(ui, |ui| {
             knob(ui, setter, &params.amp_a, "A", k);
@@ -194,12 +203,14 @@ fn env_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: 
             knob(ui, setter, &params.amp_s, "S", k);
             knob(ui, setter, &params.amp_r, "R", k);
         });
+        ui.add_space(2.0);
         ui.label(RichText::new("FILTER").small().color(MUTED));
         knob_row(ui, |ui| {
             knob(ui, setter, &params.filt_a, "A", k);
             knob(ui, setter, &params.filt_d, "D", k);
             knob(ui, setter, &params.filt_s, "S", k);
             knob(ui, setter, &params.filt_r, "R", k);
+            knob(ui, setter, &params.pitch_env, "P.ENV", k);
         });
     });
 }
@@ -212,11 +223,9 @@ fn fx_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: f
             knob(ui, setter, &params.lfo_pitch, "PIT", ks);
             knob(ui, setter, &params.lfo_pwm, "PWM", ks);
         });
-        ui.horizontal(|ui| {
+        knob_row(ui, |ui| {
             knob(ui, setter, &params.glide, "GLIDE", ks);
             latch(ui, setter, &params.legato, "LEGATO");
-        });
-        knob_row(ui, |ui| {
             knob(ui, setter, &params.cho_mix, "CHORUS", ks);
             knob(ui, setter, &params.cho_rate, "C.RATE", ks);
             knob(ui, setter, &params.cho_depth, "C.DPTH", ks);
@@ -224,46 +233,83 @@ fn fx_panel(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, ks: f
     });
 }
 
-fn knob_row(ui: &mut Ui, add: impl FnOnce(&mut Ui)) {
-    ui.horizontal_wrapped(add);
+/// Side-by-side modules with explicit widths. Avoid `ui.columns` — nested columns
+/// overlap frames and clip knob labels in egui.
+fn module_pair(
+    ui: &mut Ui,
+    gap: f32,
+    col_w: f32,
+    left: impl FnOnce(&mut Ui),
+    right: impl FnOnce(&mut Ui),
+) {
+    ui.horizontal_top(|ui| {
+        ui.spacing_mut().item_spacing.x = gap;
+        ui.vertical(|ui| {
+            ui.set_width(col_w);
+            ui.set_max_width(col_w);
+            left(ui);
+        });
+        ui.vertical(|ui| {
+            ui.set_width(col_w);
+            ui.set_max_width(col_w);
+            right(ui);
+        });
+    });
 }
 
-fn header(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter) {
+fn knob_row(ui: &mut Ui, add: impl FnOnce(&mut Ui)) {
+    ui.horizontal_wrapped(|ui| {
+        ui.spacing_mut().item_spacing = vec2(4.0, 4.0);
+        add(ui);
+    });
+}
+
+fn header(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, loaded_name: &str) {
     let w = ui.available_width();
     ui.allocate_ui_with_layout(
-        vec2(w, 64.0),
+        vec2(w, 52.0),
         egui::Layout::left_to_right(egui::Align::Center),
         |ui| {
             let rect = ui.max_rect();
             ui.painter()
-                .rect_filled(rect, CornerRadius::same(10), Color32::from_rgb(26, 24, 22));
+                .rect_filled(rect, CornerRadius::same(8), Color32::from_rgb(26, 24, 22));
             ui.painter().rect_stroke(
                 rect,
-                CornerRadius::same(10),
+                CornerRadius::same(8),
                 Stroke::new(1.0, PANEL_EDGE),
                 StrokeKind::Inside,
             );
             ui.painter().line_segment(
                 [
-                    pos2(rect.left() + 16.0, rect.bottom() - 2.0),
-                    pos2(rect.right() - 16.0, rect.bottom() - 2.0),
+                    pos2(rect.left() + 12.0, rect.bottom() - 2.0),
+                    pos2(rect.right() - 12.0, rect.bottom() - 2.0),
                 ],
                 Stroke::new(2.0, AMBER.linear_multiply(0.55)),
             );
 
-            ui.add_space(14.0);
+            if !loaded_name.is_empty() {
+                ui.painter().text(
+                    pos2(rect.center().x, rect.center().y),
+                    Align2::CENTER_CENTER,
+                    loaded_name,
+                    FontId::proportional(14.0),
+                    LCD,
+                );
+            }
+
+            ui.add_space(12.0);
             ui.label(
                 RichText::new("SUNDER")
-                    .font(FontId::proportional(24.0))
+                    .font(FontId::proportional(22.0))
                     .color(AMBER)
                     .strong(),
             );
-            ui.add_space(10.0);
+            ui.add_space(8.0);
             ui.label(RichText::new("VIRTUAL ANALOG  ·  CLAP").small().color(MUTED));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.add_space(10.0);
+                ui.add_space(8.0);
                 ui.allocate_ui_with_layout(
-                    vec2(118.0, 48.0),
+                    vec2(110.0, 42.0),
                     egui::Layout::left_to_right(egui::Align::Center),
                     |ui| {
                         header_gain(ui, setter, &params.gain);
@@ -293,24 +339,58 @@ fn header_gain(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::Flo
     });
 }
 
+fn presets_panel(
+    ui: &mut Ui,
+    params: &Arc<SunderParams>,
+    setter: &ParamSetter,
+    state: &mut GuiState,
+) {
+    egui::Frame::new()
+        .fill(PANEL)
+        .stroke(Stroke::new(1.0, PANEL_EDGE))
+        .corner_radius(8)
+        .inner_margin(egui::Margin {
+            left: 8,
+            right: 8,
+            top: 6,
+            bottom: 8,
+        })
+        .show(ui, |ui| {
+            let h = ui.available_height();
+            let w = ui.available_width();
+            if w.is_finite() && w > 1.0 {
+                ui.set_width(w);
+                ui.set_max_width(w);
+            }
+            if h.is_finite() && h > 1.0 {
+                ui.set_min_height(h);
+                ui.set_max_height(h);
+            }
+            ui.label(RichText::new("PRESETS").small().color(AMBER_DIM).strong());
+            ui.add_space(2.0);
+            preset_browser(ui, params, setter, state);
+        });
+}
+
 fn panel(ui: &mut Ui, title: &str, add: impl FnOnce(&mut Ui)) {
     egui::Frame::new()
         .fill(PANEL)
         .stroke(Stroke::new(1.0, PANEL_EDGE))
-        .corner_radius(10)
+        .corner_radius(8)
         .inner_margin(egui::Margin {
-            left: 10,
-            right: 10,
-            top: 8,
+            left: 8,
+            right: 8,
+            top: 6,
             bottom: 10,
         })
         .show(ui, |ui| {
             let w = ui.available_width();
             if w.is_finite() && w > 1.0 {
                 ui.set_width(w);
+                ui.set_max_width(w);
             }
             ui.label(RichText::new(title).small().color(AMBER_DIM).strong());
-            ui.add_space(4.0);
+            ui.add_space(2.0);
             add(ui);
         });
 }
@@ -320,27 +400,9 @@ fn preset_browser(
     params: &Arc<SunderParams>,
     setter: &ParamSetter,
     state: &mut GuiState,
-    list_height: f32,
 ) {
     ui.set_width(ui.available_width());
     ui.spacing_mut().item_spacing = vec2(4.0, 4.0);
-
-    for cat in Category::ALL {
-        let on = state.category == cat;
-        let chip = egui::Button::new(
-            RichText::new(cat.label())
-                .small()
-                .color(if on { BG } else { CREAM }),
-        )
-        .fill(if on { AMBER } else { Color32::from_rgb(42, 38, 34) })
-        .corner_radius(4)
-        .min_size(vec2(ui.available_width(), 22.0));
-        if ui.add(chip).clicked() {
-            state.category = cat;
-            state.selected = 0;
-        }
-    }
-    ui.add_space(4.0);
 
     let factory = presets::factory_presets();
     let factory_view: Vec<&Preset> = factory
@@ -360,107 +422,148 @@ fn preset_browser(
         names.push((false, p.name.clone()));
     }
 
-    egui::Frame::new()
-        .fill(LCD_BG)
-        .corner_radius(6)
-        .inner_margin(6)
-        .stroke(Stroke::new(1.0, Color32::from_rgb(36, 52, 32)))
-        .show(ui, |ui| {
+    // Bottom-up: pin Save/Del + name, then fill the leftover with categories + list.
+    ui.with_layout(egui::Layout::bottom_up(egui::Align::Min), |ui| {
+        ui.set_width(ui.available_width());
+
+        if !state.status.is_empty() {
+            ui.label(RichText::new(&state.status).small().color(MUTED));
+        }
+        ui.add(
+            egui::TextEdit::singleline(&mut state.save_name)
+                .hint_text("preset name")
+                .desired_width(ui.available_width()),
+        );
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 4.0;
+            if amber_button(ui, "SAVE").clicked() {
+                let name = if state.save_name.trim().is_empty() {
+                    "User Patch".to_string()
+                } else {
+                    state.save_name.trim().to_string()
+                };
+                let preset = Preset {
+                    name: name.clone(),
+                    category: state.category,
+                    params: presets::snapshot(params),
+                };
+                match presets::save_user_preset(&preset) {
+                    Ok(_) => {
+                        state.user = presets::load_user_presets();
+                        state.loaded_name = name.clone();
+                        state.status = format!("Saved {name}");
+                        state.save_name.clear();
+                    }
+                    Err(e) => state.status = e,
+                }
+            }
+            if amber_button(ui, "DEL").clicked() {
+                if let Some((factory_flag, name)) = names.get(state.selected) {
+                    if !*factory_flag {
+                        match presets::delete_user_preset(name) {
+                            Ok(()) => {
+                                if state.loaded_name == *name {
+                                    state.loaded_name.clear();
+                                }
+                                state.user = presets::load_user_presets();
+                                state.selected = 0;
+                                state.status = format!("Deleted {name}");
+                            }
+                            Err(e) => state.status = e,
+                        }
+                    } else {
+                        state.status = "Factory is read-only".into();
+                    }
+                }
+            }
+        });
+        ui.add_space(4.0);
+
+        ui.with_layout(egui::Layout::top_down(egui::Align::Min), |ui| {
             ui.set_width(ui.available_width());
-            egui::ScrollArea::vertical()
-                .max_height(list_height)
-                .auto_shrink([false, false])
+            ui.spacing_mut().item_spacing = vec2(4.0, 4.0);
+
+            let cats = Category::ALL;
+            let col_w = ((ui.available_width() - 4.0) * 0.5).max(64.0);
+            for row in cats.chunks(2) {
+                ui.horizontal(|ui| {
+                    ui.spacing_mut().item_spacing.x = 4.0;
+                    for &cat in row {
+                        let on = state.category == cat;
+                        let chip = egui::Button::new(
+                            RichText::new(cat.label())
+                                .small()
+                                .color(if on { BG } else { CREAM }),
+                        )
+                        .fill(if on { AMBER } else { Color32::from_rgb(42, 38, 34) })
+                        .corner_radius(4)
+                        .min_size(vec2(col_w, 20.0));
+                        if ui.add(chip).clicked() {
+                            state.category = cat;
+                            state.selected = 0;
+                        }
+                    }
+                });
+            }
+            ui.add_space(4.0);
+
+            let list_h = ui.available_height().max(48.0);
+            egui::Frame::new()
+                .fill(LCD_BG)
+                .corner_radius(6)
+                .inner_margin(6)
+                .stroke(Stroke::new(1.0, Color32::from_rgb(36, 52, 32)))
                 .show(ui, |ui| {
                     ui.set_width(ui.available_width());
-                    ui.with_layout(
-                        egui::Layout::top_down(egui::Align::Min).with_cross_justify(true),
-                        |ui| {
-                            for (i, (factory_flag, name)) in names.iter().enumerate() {
-                                let selected = state.selected == i;
-                                let text = if *factory_flag {
-                                    name.clone()
-                                } else {
-                                    format!("• {name}")
-                                };
-                                let color = if selected { AMBER } else { LCD };
-                                if ui
-                                    .selectable_label(
-                                        selected,
-                                        RichText::new(text).color(color).small().monospace(),
-                                    )
-                                    .clicked()
-                                {
-                                    state.selected = i;
-                                    let patch = if *factory_flag {
-                                        factory
-                                            .iter()
-                                            .find(|p| p.name == *name)
-                                            .map(|p| p.params.clone())
-                                    } else {
-                                        state
-                                            .user
-                                            .iter()
-                                            .find(|p| p.name == *name)
-                                            .map(|p| p.params.clone())
-                                    };
-                                    if let Some(patch) = patch {
-                                        presets::apply(setter, &patch);
-                                        state.status = format!("Loaded {name}");
+                    egui::ScrollArea::vertical()
+                        .max_height((list_h - 14.0).max(32.0))
+                        .auto_shrink([false, false])
+                        .show(ui, |ui| {
+                            ui.set_width(ui.available_width());
+                            ui.with_layout(
+                                egui::Layout::top_down(egui::Align::Min).with_cross_justify(true),
+                                |ui| {
+                                    for (i, (factory_flag, name)) in names.iter().enumerate() {
+                                        let selected = state.selected == i;
+                                        let text = if *factory_flag {
+                                            name.clone()
+                                        } else {
+                                            format!("• {name}")
+                                        };
+                                        let color = if selected { AMBER } else { LCD };
+                                        if ui
+                                            .selectable_label(
+                                                selected,
+                                                RichText::new(text).color(color).small().monospace(),
+                                            )
+                                            .clicked()
+                                        {
+                                            state.selected = i;
+                                            let patch = if *factory_flag {
+                                                factory
+                                                    .iter()
+                                                    .find(|p| p.name == *name)
+                                                    .map(|p| p.params.clone())
+                                            } else {
+                                                state
+                                                    .user
+                                                    .iter()
+                                                    .find(|p| p.name == *name)
+                                                    .map(|p| p.params.clone())
+                                            };
+                                            if let Some(patch) = patch {
+                                                presets::apply(setter, &patch);
+                                                state.loaded_name = name.clone();
+                                                state.status.clear();
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                        },
-                    );
+                                },
+                            );
+                        });
                 });
         });
-
-    ui.add_space(6.0);
-    ui.horizontal(|ui| {
-        if amber_button(ui, "SAVE").clicked() {
-            let name = if state.save_name.trim().is_empty() {
-                "User Patch".to_string()
-            } else {
-                state.save_name.trim().to_string()
-            };
-            let preset = Preset {
-                name: name.clone(),
-                category: state.category,
-                params: presets::snapshot(params),
-            };
-            match presets::save_user_preset(&preset) {
-                Ok(_) => {
-                    state.user = presets::load_user_presets();
-                    state.status = format!("Saved {name}");
-                    state.save_name.clear();
-                }
-                Err(e) => state.status = e,
-            }
-        }
-        if amber_button(ui, "DEL").clicked() {
-            if let Some((factory_flag, name)) = names.get(state.selected) {
-                if !*factory_flag {
-                    match presets::delete_user_preset(name) {
-                        Ok(()) => {
-                            state.user = presets::load_user_presets();
-                            state.selected = 0;
-                            state.status = format!("Deleted {name}");
-                        }
-                        Err(e) => state.status = e,
-                    }
-                } else {
-                    state.status = "Factory is read-only".into();
-                }
-            }
-        }
     });
-    ui.add(
-        egui::TextEdit::singleline(&mut state.save_name)
-            .hint_text("preset name")
-            .desired_width(ui.available_width()),
-    );
-    if !state.status.is_empty() {
-        ui.label(RichText::new(&state.status).small().color(LCD));
-    }
 }
 
 fn amber_button(ui: &mut Ui, text: &str) -> egui::Response {
@@ -557,15 +660,16 @@ fn filter_picker(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::E
 fn latch(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::BoolParam, label: &str) {
     let on = param.value();
     ui.vertical(|ui| {
-        ui.add_space(10.0);
-        let (rect, response) = ui.allocate_exact_size(vec2(52.0, 28.0), Sense::click());
+        ui.set_width(48.0);
+        ui.add_space(6.0);
+        let (rect, response) = ui.allocate_exact_size(vec2(44.0, 22.0), Sense::click());
         let painter = ui.painter();
-        painter.rect_filled(rect, CornerRadius::same(14), INSET);
-        painter.rect_stroke(rect, CornerRadius::same(14), Stroke::new(1.0, PANEL_EDGE), StrokeKind::Inside);
-        let knob_x = if on { rect.right() - 14.0 } else { rect.left() + 14.0 };
+        painter.rect_filled(rect, CornerRadius::same(11), INSET);
+        painter.rect_stroke(rect, CornerRadius::same(11), Stroke::new(1.0, PANEL_EDGE), StrokeKind::Inside);
+        let knob_x = if on { rect.right() - 11.0 } else { rect.left() + 11.0 };
         painter.circle_filled(
             pos2(knob_x, rect.center().y),
-            10.0,
+            8.0,
             if on { AMBER } else { Color32::from_rgb(90, 86, 80) },
         );
         ui.label(RichText::new(label).small().color(if on { AMBER } else { MUTED }));
@@ -579,8 +683,9 @@ fn latch(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::BoolParam
 
 fn knob<P: Param>(ui: &mut Ui, setter: &ParamSetter, param: &P, label: &str, size: f32) {
     ui.vertical(|ui| {
-        ui.set_width(size + 4.0);
-        ui.set_max_width(size + 4.0);
+        ui.set_width(size + 2.0);
+        ui.set_max_width(size + 2.0);
+        ui.set_min_height(size + 28.0);
         ui.spacing_mut().item_spacing.y = 1.0;
 
         let (rect, mut response) = ui.allocate_exact_size(vec2(size, size), Sense::click_and_drag());
@@ -590,12 +695,12 @@ fn knob<P: Param>(ui: &mut Ui, setter: &ParamSetter, param: &P, label: &str, siz
 
         ui.label(
             RichText::new(label)
-                .font(FontId::proportional(10.0))
+                .font(FontId::proportional(9.5))
                 .color(MUTED),
         );
         ui.label(
             RichText::new(pretty_value(param))
-                .font(FontId::proportional(10.0))
+                .font(FontId::proportional(9.5))
                 .color(CREAM),
         );
     });
@@ -669,16 +774,38 @@ fn interact_knob<P: Param>(
         response.mark_changed();
     }
     if response.hovered() {
-        let scroll = ui.input(|i| i.smooth_scroll_delta.y);
-        if scroll.abs() > 0.1 {
+        // Discrete MouseWheel events — smooth_scroll_delta lasts many frames and
+        // was jumping int knobs (e.g. Voices 1→5) on a single notch.
+        let mut steps = 0i32;
+        ui.input(|i| {
+            for event in &i.events {
+                if let egui::Event::MouseWheel { delta, .. } = event {
+                    if delta.y > 0.0 {
+                        steps += 1;
+                    } else if delta.y < 0.0 {
+                        steps -= 1;
+                    }
+                }
+            }
+        });
+        if steps != 0 {
+            // At most one parameter step per frame (one physical notch).
+            let steps = steps.signum();
             setter.begin_set_parameter(param);
-            let next = if scroll > 0.0 {
-                param.next_step(param.modulated_plain_value(), false)
+            let value = param.modulated_plain_value();
+            let value = if steps > 0 {
+                param.next_step(value, false)
             } else {
-                param.previous_step(param.modulated_plain_value(), false)
+                param.previous_step(value, false)
             };
-            setter.set_parameter(param, next);
+            setter.set_parameter(param, value);
             setter.end_set_parameter(param);
+            response.mark_changed();
+            // Consume wheel so the parent ScrollArea does not move the page.
+            ui.ctx().input_mut(|i| {
+                i.smooth_scroll_delta.y = 0.0;
+                i.raw_scroll_delta.y = 0.0;
+            });
         }
     }
 }
