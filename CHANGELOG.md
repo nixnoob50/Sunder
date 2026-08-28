@@ -2,6 +2,12 @@
 
 All notable changes to Sunder are documented here.
 
+## [0.6.2] — 2026-08-27
+
+### Added
+- WebP title card in `marketing/` and on the README
+- README download, requirements, and build instructions
+
 ## [0.6.1] — 2026-08-27
 
 ### Added
