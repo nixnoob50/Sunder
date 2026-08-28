@@ -7,7 +7,7 @@ use std::f32::consts::PI;
 use std::sync::Arc;
 
 use crate::params::{FilterChoice, NoiseChoice, SunderParams, WaveChoice};
-use crate::presets::{self, Category, Preset};
+use crate::presets::{self, Category, Preset, Ratings};
 
 const BG: Color32 = Color32::from_rgb(18, 17, 16);
 const PANEL: Color32 = Color32::from_rgb(32, 30, 28);
@@ -21,26 +21,36 @@ const LCD: Color32 = Color32::from_rgb(168, 214, 140);
 const LCD_BG: Color32 = Color32::from_rgb(12, 18, 12);
 const KNOB_METAL: Color32 = Color32::from_rgb(48, 46, 44);
 const KNOB_TOP: Color32 = Color32::from_rgb(72, 68, 64);
+/// Name + 5 stars on one row. Modules use leftover width only.
+const PRESET_COL_W: f32 = 252.0;
+const STAR_PX: f32 = 12.0;
+const STAR_GAP: f32 = 2.0;
 
 pub struct GuiState {
     category: Category,
+    /// Virtual Favorites view — not a `Category`. When true, the list is starred
+    /// patches (all banks) sorted by rating then name.
+    favorites: bool,
     selected: usize,
     /// Name of the last loaded or saved patch (shown in the title bar).
     loaded_name: String,
     save_name: String,
     status: String,
     user: Vec<Preset>,
+    ratings: Ratings,
 }
 
 impl Default for GuiState {
     fn default() -> Self {
         Self {
             category: Category::Bass,
+            favorites: false,
             selected: 0,
             loaded_name: String::new(),
             save_name: String::new(),
             status: String::new(),
             user: presets::load_user_presets(),
+            ratings: presets::load_ratings(),
         }
     }
 }
@@ -59,7 +69,7 @@ pub fn draw(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, state
     ui.add_space(2.0);
 
     let body = ui.available_rect_before_wrap();
-    let preset_w = 168.0;
+    let preset_w = PRESET_COL_W;
     let mods_w = (body.width() - preset_w - 6.0).max(200.0);
     let body_h = body.height();
 
@@ -74,7 +84,7 @@ pub fn draw(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, state
             |ui| {
                 ui.set_width(preset_w);
                 ui.set_max_width(preset_w);
-                ui.set_clip_rect(ui.max_rect());
+                ui.shrink_clip_rect(ui.max_rect());
                 presets_panel(ui, params, setter, state);
             },
         );
@@ -405,21 +415,20 @@ fn preset_browser(
     ui.spacing_mut().item_spacing = vec2(4.0, 4.0);
 
     let factory = presets::factory_presets();
-    let factory_view: Vec<&Preset> = factory
-        .iter()
-        .filter(|p| p.category == state.category)
-        .collect();
-    let user_view: Vec<&Preset> = state
-        .user
-        .iter()
-        .filter(|p| p.category == state.category)
-        .collect();
-    let mut names: Vec<(bool, String)> = Vec::new();
-    for p in &factory_view {
-        names.push((true, p.name.clone()));
-    }
-    for p in &user_view {
-        names.push((false, p.name.clone()));
+    let names: Vec<(bool, String)> = if state.favorites {
+        presets::favorite_entries(factory, &state.user, &state.ratings)
+    } else {
+        let mut names = Vec::new();
+        for p in factory.iter().filter(|p| p.category == state.category) {
+            names.push((true, p.name.clone()));
+        }
+        for p in state.user.iter().filter(|p| p.category == state.category) {
+            names.push((false, p.name.clone()));
+        }
+        names
+    };
+    if state.selected >= names.len() {
+        state.selected = 0;
     }
 
     // Bottom-up: pin Save/Del + name, then fill the leftover with categories + list.
@@ -465,6 +474,8 @@ fn preset_browser(
                                 if state.loaded_name == *name {
                                     state.loaded_name.clear();
                                 }
+                                state.ratings.set(false, name, 0);
+                                let _ = presets::save_ratings(&state.ratings);
                                 state.user = presets::load_user_presets();
                                 state.selected = 0;
                                 state.status = format!("Deleted {name}");
@@ -483,13 +494,27 @@ fn preset_browser(
             ui.set_width(ui.available_width());
             ui.spacing_mut().item_spacing = vec2(4.0, 4.0);
 
+            let fav_on = state.favorites;
+            let fav_chip = egui::Button::new(
+                RichText::new("Favorites")
+                    .small()
+                    .color(if fav_on { BG } else { CREAM }),
+            )
+            .fill(if fav_on { AMBER } else { Color32::from_rgb(42, 38, 34) })
+            .corner_radius(4)
+            .min_size(vec2(ui.available_width(), 20.0));
+            if ui.add(fav_chip).clicked() {
+                state.favorites = true;
+                state.selected = 0;
+            }
+
             let cats = Category::ALL;
             let col_w = ((ui.available_width() - 4.0) * 0.5).max(64.0);
             for row in cats.chunks(2) {
                 ui.horizontal(|ui| {
                     ui.spacing_mut().item_spacing.x = 4.0;
                     for &cat in row {
-                        let on = state.category == cat;
+                        let on = !state.favorites && state.category == cat;
                         let chip = egui::Button::new(
                             RichText::new(cat.label())
                                 .small()
@@ -499,6 +524,7 @@ fn preset_browser(
                         .corner_radius(4)
                         .min_size(vec2(col_w, 20.0));
                         if ui.add(chip).clicked() {
+                            state.favorites = false;
                             state.category = cat;
                             state.selected = 0;
                         }
@@ -507,61 +533,125 @@ fn preset_browser(
             }
             ui.add_space(4.0);
 
+            // Pin the LCD list to leftover height and keep its clip inside that
+            // slot. Replacing clip_rect on name rows let the full list paint
+            // over the category chips.
+            let list_w = ui.available_width();
             let list_h = ui.available_height().max(48.0);
-            egui::Frame::new()
-                .fill(LCD_BG)
-                .corner_radius(6)
-                .inner_margin(6)
-                .stroke(Stroke::new(1.0, Color32::from_rgb(36, 52, 32)))
-                .show(ui, |ui| {
-                    ui.set_width(ui.available_width());
-                    egui::ScrollArea::vertical()
-                        .max_height((list_h - 14.0).max(32.0))
-                        .auto_shrink([false, false])
+            ui.allocate_ui_with_layout(
+                vec2(list_w, list_h),
+                egui::Layout::top_down(egui::Align::Min),
+                |ui| {
+                    ui.set_width(list_w);
+                    ui.set_max_width(list_w);
+                    ui.set_min_height(list_h);
+                    ui.set_max_height(list_h);
+                    ui.shrink_clip_rect(ui.max_rect());
+                    egui::Frame::new()
+                        .fill(LCD_BG)
+                        .corner_radius(6)
+                        .inner_margin(6)
+                        .stroke(Stroke::new(1.0, Color32::from_rgb(36, 52, 32)))
                         .show(ui, |ui| {
                             ui.set_width(ui.available_width());
-                            ui.with_layout(
-                                egui::Layout::top_down(egui::Align::Min).with_cross_justify(true),
-                                |ui| {
+                            ui.set_max_height((list_h - 4.0).max(32.0));
+                            egui::ScrollArea::vertical()
+                                .id_salt("sunder_preset_list")
+                                .max_height((list_h - 16.0).max(32.0))
+                                .auto_shrink([false, false])
+                                .show(ui, |ui| {
+                                    ui.set_width(ui.available_width());
+                                    ui.spacing_mut().item_spacing.y = 1.0;
+                                    if names.is_empty() && state.favorites {
+                                        ui.label(
+                                            RichText::new("No starred presets")
+                                                .small()
+                                                .color(MUTED),
+                                        );
+                                    }
                                     for (i, (factory_flag, name)) in names.iter().enumerate() {
                                         let selected = state.selected == i;
+                                        let rating = state.ratings.get(*factory_flag, name);
                                         let text = if *factory_flag {
                                             name.clone()
                                         } else {
                                             format!("• {name}")
                                         };
                                         let color = if selected { AMBER } else { LCD };
-                                        if ui
-                                            .selectable_label(
-                                                selected,
-                                                RichText::new(text).color(color).small().monospace(),
-                                            )
-                                            .clicked()
-                                        {
+                                        let mut load = false;
+                                        let mut new_stars = None;
+                                        ui.horizontal(|ui| {
+                                            ui.spacing_mut().item_spacing.x = 4.0;
+                                            let star_w = star_row_width();
+                                            let name_w =
+                                                (ui.available_width() - star_w - 4.0).max(48.0);
+                                            let (name_rect, name_resp) = ui.allocate_exact_size(
+                                                vec2(name_w, 16.0),
+                                                Sense::click(),
+                                            );
+                                            if selected {
+                                                ui.painter().rect_filled(
+                                                    name_rect,
+                                                    2.0,
+                                                    AMBER.linear_multiply(0.22),
+                                                );
+                                            }
+                                            ui.painter().with_clip_rect(name_rect).text(
+                                                pos2(name_rect.left(), name_rect.center().y),
+                                                Align2::LEFT_CENTER,
+                                                &text,
+                                                FontId::monospace(11.0),
+                                                color,
+                                            );
+                                            if name_resp.clicked() {
+                                                load = true;
+                                            }
+                                            new_stars = star_rating(ui, rating);
+                                        });
+                                        if load {
                                             state.selected = i;
-                                            let patch = if *factory_flag {
-                                                factory
-                                                    .iter()
-                                                    .find(|p| p.name == *name)
-                                                    .map(|p| p.params.clone())
+                                            let loaded = if *factory_flag {
+                                                factory.iter().find(|p| p.name == *name).map(|p| {
+                                                    (p.category, p.params.clone())
+                                                })
                                             } else {
-                                                state
-                                                    .user
-                                                    .iter()
-                                                    .find(|p| p.name == *name)
-                                                    .map(|p| p.params.clone())
+                                                state.user.iter().find(|p| p.name == *name).map(
+                                                    |p| (p.category, p.params.clone()),
+                                                )
                                             };
-                                            if let Some(patch) = patch {
+                                            if let Some((cat, patch)) = loaded {
                                                 presets::apply(setter, &patch);
                                                 state.loaded_name = name.clone();
+                                                state.category = cat;
                                                 state.status.clear();
                                             }
                                         }
+                                        if let Some(stars) = new_stars {
+                                            let factory_flag = *factory_flag;
+                                            let name = name.clone();
+                                            state.ratings.set(factory_flag, &name, stars);
+                                            if let Err(e) = presets::save_ratings(&state.ratings) {
+                                                state.status = e;
+                                            }
+                                            if state.favorites {
+                                                let resorted = presets::favorite_entries(
+                                                    factory,
+                                                    &state.user,
+                                                    &state.ratings,
+                                                );
+                                                state.selected = resorted
+                                                    .iter()
+                                                    .position(|(f, n)| {
+                                                        *f == factory_flag && n == &name
+                                                    })
+                                                    .unwrap_or(0);
+                                            }
+                                        }
                                     }
-                                },
-                            );
+                                });
                         });
-                });
+                },
+            );
         });
     });
 }
@@ -572,6 +662,61 @@ fn amber_button(ui: &mut Ui, text: &str) -> egui::Response {
             .fill(AMBER)
             .corner_radius(4),
     )
+}
+
+fn star_row_width() -> f32 {
+    5.0 * STAR_PX + 4.0 * STAR_GAP
+}
+
+/// Click star N to set that rating. Click the current rating again to clear.
+fn star_rating(ui: &mut Ui, rating: u8) -> Option<u8> {
+    let mut new = None;
+    ui.allocate_ui_with_layout(
+        vec2(star_row_width(), STAR_PX),
+        egui::Layout::left_to_right(egui::Align::Center),
+        |ui| {
+            ui.spacing_mut().item_spacing.x = STAR_GAP;
+            let size = vec2(STAR_PX, STAR_PX);
+            for i in 1u8..=5 {
+                let (rect, resp) = ui.allocate_exact_size(size, Sense::click());
+                paint_star(ui, rect, i <= rating);
+                if resp.hovered() {
+                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                }
+                if resp.clicked() {
+                    new = Some(if rating == i { 0 } else { i });
+                }
+            }
+        },
+    );
+    new
+}
+
+fn paint_star(ui: &Ui, rect: Rect, filled: bool) {
+    let painter = ui.painter();
+    let c = rect.center();
+    let r = rect.width() * 0.46;
+    let mut pts = Vec::with_capacity(10);
+    for i in 0..10 {
+        let a = -0.5 * PI + i as f32 * PI / 5.0;
+        let rad = if i % 2 == 0 { r } else { r * 0.40 };
+        pts.push(pos2(c.x + rad * a.cos(), c.y + rad * a.sin()));
+    }
+    if filled {
+        for i in 0..10 {
+            painter.add(egui::Shape::convex_polygon(
+                vec![c, pts[i], pts[(i + 1) % 10]],
+                AMBER,
+                Stroke::NONE,
+            ));
+        }
+    } else {
+        pts.push(pts[0]);
+        painter.add(egui::Shape::line(
+            pts,
+            PathStroke::new(1.0, Color32::from_rgb(70, 92, 64)),
+        ));
+    }
 }
 
 fn wave_picker(ui: &mut Ui, setter: &ParamSetter, param: &nih_plug::prelude::EnumParam<WaveChoice>) {

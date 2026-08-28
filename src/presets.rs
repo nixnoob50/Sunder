@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
@@ -261,14 +262,98 @@ fn wave_id(i: i32) -> &'static str {
     }
 }
 
-pub fn user_dir() -> PathBuf {
+pub fn data_dir() -> PathBuf {
     let base = std::env::var_os("XDG_DATA_HOME")
         .map(PathBuf::from)
         .or_else(|| {
             std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share"))
         })
         .unwrap_or_else(|| PathBuf::from("."));
-    base.join("sunder/presets")
+    base.join("sunder")
+}
+
+pub fn user_dir() -> PathBuf {
+    data_dir().join("presets")
+}
+
+/// Per-user star ratings (1–5) for factory and user patches. Not stored in the
+/// factory bank — that file is read-only and embedded at compile time.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct Ratings {
+    #[serde(default)]
+    factory: BTreeMap<String, u8>,
+    #[serde(default)]
+    user: BTreeMap<String, u8>,
+}
+
+impl Ratings {
+    pub fn get(&self, factory: bool, name: &str) -> u8 {
+        let map = if factory {
+            &self.factory
+        } else {
+            &self.user
+        };
+        map.get(name).copied().unwrap_or(0).min(5)
+    }
+
+    pub fn set(&mut self, factory: bool, name: &str, stars: u8) {
+        let map = if factory {
+            &mut self.factory
+        } else {
+            &mut self.user
+        };
+        if stars == 0 {
+            map.remove(name);
+        } else {
+            map.insert(name.to_string(), stars.min(5));
+        }
+    }
+}
+
+pub fn ratings_path() -> PathBuf {
+    data_dir().join("ratings.json")
+}
+
+pub fn load_ratings() -> Ratings {
+    let path = ratings_path();
+    let Ok(text) = fs::read_to_string(&path) else {
+        return Ratings::default();
+    };
+    serde_json::from_str(&text).unwrap_or_default()
+}
+
+pub fn save_ratings(ratings: &Ratings) -> Result<(), String> {
+    let dir = data_dir();
+    fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let json = serde_json::to_string_pretty(ratings).map_err(|e| e.to_string())?;
+    fs::write(ratings_path(), json).map_err(|e| e.to_string())
+}
+
+/// Starred patches, highest rating first, then name A–Z (case-insensitive).
+pub fn favorite_entries(
+    factory: &[Preset],
+    user: &[Preset],
+    ratings: &Ratings,
+) -> Vec<(bool, String)> {
+    let mut items: Vec<(u8, bool, String)> = Vec::new();
+    for p in factory {
+        let stars = ratings.get(true, &p.name);
+        if stars > 0 {
+            items.push((stars, true, p.name.clone()));
+        }
+    }
+    for p in user {
+        let stars = ratings.get(false, &p.name);
+        if stars > 0 {
+            items.push((stars, false, p.name.clone()));
+        }
+    }
+    items.sort_by(|a, b| {
+        b.0.cmp(&a.0)
+            .then_with(|| a.2.to_ascii_lowercase().cmp(&b.2.to_ascii_lowercase()))
+            .then_with(|| a.1.cmp(&b.1))
+    });
+    items.into_iter().map(|(_, factory, name)| (factory, name)).collect()
 }
 
 pub fn load_user_presets() -> Vec<Preset> {
@@ -329,4 +414,47 @@ pub fn factory_presets() -> &'static [Preset] {
             serde_json::from_str(include_str!("../presets/factory.json")).unwrap_or_default()
         })
         .as_slice()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn preset(name: &str) -> Preset {
+        Preset {
+            name: name.into(),
+            category: Category::Bass,
+            params: Patch::default(),
+        }
+    }
+
+    #[test]
+    fn favorites_sort_by_rating_then_name() {
+        let factory = vec![
+            preset("Zulu"),
+            preset("Alpha"),
+            preset("Mid"),
+            preset("Skip"),
+        ];
+        let user = vec![preset("beta")];
+        let mut ratings = Ratings::default();
+        ratings.set(true, "Zulu", 5);
+        ratings.set(true, "Alpha", 5);
+        ratings.set(true, "Mid", 2);
+        ratings.set(false, "beta", 5);
+        let names = favorite_entries(&factory, &user, &ratings);
+        let names: Vec<&str> = names.iter().map(|(_, n)| n.as_str()).collect();
+        assert_eq!(names, ["Alpha", "beta", "Zulu", "Mid"]);
+    }
+
+    #[test]
+    fn clearing_rating_drops_favorite() {
+        let factory = vec![preset("Keep"), preset("Drop")];
+        let mut ratings = Ratings::default();
+        ratings.set(true, "Keep", 3);
+        ratings.set(true, "Drop", 1);
+        ratings.set(true, "Drop", 0);
+        let names = favorite_entries(&factory, &[], &ratings);
+        assert_eq!(names, vec![(true, "Keep".into())]);
+    }
 }

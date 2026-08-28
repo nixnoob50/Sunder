@@ -2,6 +2,18 @@
 
 All notable changes to Sunder are documented here.
 
+## [0.6.0] — 2026-08-27
+
+### Added
+- Star ratings (1–5) on factory and user presets; click the current star to clear
+- Favorites view: all starred patches, sorted by rating descending then name
+
+### Changed
+- Preset sidebar widened so stars sit to the right of the patch name
+
+### Fixed
+- Preset list no longer paints over the category chips
+
 ## [0.5.1] — 2026-08-26
 
 ### Fixed
