@@ -2,6 +2,11 @@
 
 All notable changes to Sunder are documented here.
 
+## [0.6.1] — 2026-08-27
+
+### Added
+- 1080p marketing stills in `marketing/`, including isolated hardware-synth visualizations with transparent backgrounds
+
 ## [0.6.0] — 2026-08-27
 
 ### Added
