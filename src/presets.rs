@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
-use std::sync::OnceLock;
+use std::sync::{Mutex, MutexGuard, OnceLock};
+use std::time::SystemTime;
 
 use crate::params::SunderParams;
 use nih_plug::prelude::*;
@@ -310,23 +311,95 @@ impl Ratings {
     }
 }
 
-pub fn ratings_path() -> PathBuf {
-    data_dir().join("ratings.json")
+struct RatingsStore {
+    ratings: Ratings,
+    generation: u64,
+    disk_mtime: Option<SystemTime>,
 }
 
-pub fn load_ratings() -> Ratings {
-    let path = ratings_path();
-    let Ok(text) = fs::read_to_string(&path) else {
+fn ratings_store() -> &'static Mutex<RatingsStore> {
+    static STORE: OnceLock<Mutex<RatingsStore>> = OnceLock::new();
+    STORE.get_or_init(|| {
+        Mutex::new(RatingsStore {
+            ratings: read_ratings_file(),
+            generation: 0,
+            disk_mtime: ratings_mtime(),
+        })
+    })
+}
+
+fn lock_store() -> MutexGuard<'static, RatingsStore> {
+    ratings_store().lock().unwrap_or_else(|e| e.into_inner())
+}
+
+fn ratings_mtime() -> Option<SystemTime> {
+    fs::metadata(ratings_path()).ok()?.modified().ok()
+}
+
+fn read_ratings_file() -> Ratings {
+    let Ok(text) = fs::read_to_string(ratings_path()) else {
         return Ratings::default();
     };
     serde_json::from_str(&text).unwrap_or_default()
 }
 
-pub fn save_ratings(ratings: &Ratings) -> Result<(), String> {
+fn write_ratings_file(ratings: &Ratings) -> Result<(), String> {
     let dir = data_dir();
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let json = serde_json::to_string_pretty(ratings).map_err(|e| e.to_string())?;
     fs::write(ratings_path(), json).map_err(|e| e.to_string())
+}
+
+fn pull_disk_if_newer(store: &mut RatingsStore) {
+    let Some(mtime) = ratings_mtime() else {
+        return;
+    };
+    let newer = store
+        .disk_mtime
+        .map(|prev| mtime > prev)
+        .unwrap_or(true);
+    if newer {
+        store.ratings = read_ratings_file();
+        store.disk_mtime = Some(mtime);
+        store.generation = store.generation.wrapping_add(1);
+    }
+}
+
+/// Snapshot for a newly opened editor. Also picks up disk writes from
+/// another Bitwig process.
+pub fn snapshot_ratings() -> (Ratings, u64) {
+    let mut store = lock_store();
+    pull_disk_if_newer(&mut store);
+    (store.ratings.clone(), store.generation)
+}
+
+/// Copy shared ratings into the editor if another instance changed them.
+pub fn sync_ratings(local_gen: &mut u64, local: &mut Ratings) {
+    let mut store = lock_store();
+    pull_disk_if_newer(&mut store);
+    if store.generation != *local_gen {
+        *local = store.ratings.clone();
+        *local_gen = store.generation;
+    }
+}
+
+/// Write a rating, persist it, and bump the generation so other editors refresh.
+pub fn set_shared_rating(
+    factory: bool,
+    name: &str,
+    stars: u8,
+) -> Result<(Ratings, u64), String> {
+    let mut store = lock_store();
+    pull_disk_if_newer(&mut store);
+    store.ratings.set(factory, name, stars);
+    write_ratings_file(&store.ratings)?;
+    store.disk_mtime = ratings_mtime();
+    store.generation = store.generation.wrapping_add(1);
+    Ok((store.ratings.clone(), store.generation))
+}
+
+pub fn ratings_path() -> PathBuf {
+    data_dir().join("ratings.json")
 }
 
 /// Starred patches, highest rating first, then name A–Z (case-insensitive).

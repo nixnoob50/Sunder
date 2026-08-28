@@ -2,11 +2,16 @@
 
 All notable changes to Sunder are documented here.
 
-## [0.6.2] — 2026-08-27
+## [0.6.2] — 2026-08-28
 
 ### Added
+- Refresh on the Save/Del row when Favorites ratings change; the list stays put until you press it
 - WebP title card in `marketing/` and on the README
 - README download, requirements, and build instructions
+
+### Fixed
+- Star ratings now update in every open Sunder instance, not only the one that set them
+- Favorites no longer re-sorts under the cursor while you are rating
 
 ## [0.6.1] — 2026-08-27
 

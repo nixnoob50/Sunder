@@ -5,6 +5,7 @@ use nih_plug_egui::egui::{
 };
 use std::f32::consts::PI;
 use std::sync::Arc;
+use std::time::Duration;
 
 use crate::params::{FilterChoice, NoiseChoice, SunderParams, WaveChoice};
 use crate::presets::{self, Category, Preset, Ratings};
@@ -38,10 +39,16 @@ pub struct GuiState {
     status: String,
     user: Vec<Preset>,
     ratings: Ratings,
+    ratings_gen: u64,
+    /// Frozen Favorites order while rating. `None` when not in that view.
+    fav_order: Option<Vec<(bool, String)>>,
+    /// Show Refresh after ratings change in Favorites (list stays put until then).
+    fav_dirty: bool,
 }
 
 impl Default for GuiState {
     fn default() -> Self {
+        let (ratings, ratings_gen) = presets::snapshot_ratings();
         Self {
             category: Category::Bass,
             favorites: false,
@@ -50,12 +57,22 @@ impl Default for GuiState {
             save_name: String::new(),
             status: String::new(),
             user: presets::load_user_presets(),
-            ratings: presets::load_ratings(),
+            ratings,
+            ratings_gen,
+            fav_order: None,
+            fav_dirty: false,
         }
     }
 }
 
 pub fn draw(ui: &mut Ui, params: &Arc<SunderParams>, setter: &ParamSetter, state: &mut GuiState) {
+    let gen_before = state.ratings_gen;
+    presets::sync_ratings(&mut state.ratings_gen, &mut state.ratings);
+    if state.favorites && state.ratings_gen != gen_before {
+        state.fav_dirty = true;
+    }
+    ui.ctx().request_repaint_after(Duration::from_millis(250));
+
     ui.visuals_mut().override_text_color = Some(CREAM);
     ui.visuals_mut().extreme_bg_color = INSET;
     ui.visuals_mut().widgets.inactive.bg_fill = Color32::from_rgb(40, 38, 36);
@@ -416,7 +433,10 @@ fn preset_browser(
 
     let factory = presets::factory_presets();
     let names: Vec<(bool, String)> = if state.favorites {
-        presets::favorite_entries(factory, &state.user, &state.ratings)
+        state
+            .fav_order
+            .clone()
+            .unwrap_or_else(|| presets::favorite_entries(factory, &state.user, &state.ratings))
     } else {
         let mut names = Vec::new();
         for p in factory.iter().filter(|p| p.category == state.category) {
@@ -474,8 +494,13 @@ fn preset_browser(
                                 if state.loaded_name == *name {
                                     state.loaded_name.clear();
                                 }
-                                state.ratings.set(false, name, 0);
-                                let _ = presets::save_ratings(&state.ratings);
+                                match presets::set_shared_rating(false, name, 0) {
+                                    Ok((ratings, gen)) => {
+                                        state.ratings = ratings;
+                                        state.ratings_gen = gen;
+                                    }
+                                    Err(_) => {}
+                                }
                                 state.user = presets::load_user_presets();
                                 state.selected = 0;
                                 state.status = format!("Deleted {name}");
@@ -486,6 +511,9 @@ fn preset_browser(
                         state.status = "Factory is read-only".into();
                     }
                 }
+            }
+            if state.favorites && state.fav_dirty && amber_button(ui, "REFRESH").clicked() {
+                refresh_favorites(state, factory);
             }
         });
         ui.add_space(4.0);
@@ -504,8 +532,9 @@ fn preset_browser(
             .corner_radius(4)
             .min_size(vec2(ui.available_width(), 20.0));
             if ui.add(fav_chip).clicked() {
-                state.favorites = true;
-                state.selected = 0;
+                if !state.favorites {
+                    enter_favorites(state, factory);
+                }
             }
 
             let cats = Category::ALL;
@@ -525,6 +554,8 @@ fn preset_browser(
                         .min_size(vec2(col_w, 20.0));
                         if ui.add(chip).clicked() {
                             state.favorites = false;
+                            state.fav_order = None;
+                            state.fav_dirty = false;
                             state.category = cat;
                             state.selected = 0;
                         }
@@ -629,22 +660,19 @@ fn preset_browser(
                                         if let Some(stars) = new_stars {
                                             let factory_flag = *factory_flag;
                                             let name = name.clone();
-                                            state.ratings.set(factory_flag, &name, stars);
-                                            if let Err(e) = presets::save_ratings(&state.ratings) {
-                                                state.status = e;
+                                            match presets::set_shared_rating(
+                                                factory_flag,
+                                                &name,
+                                                stars,
+                                            ) {
+                                                Ok((ratings, gen)) => {
+                                                    state.ratings = ratings;
+                                                    state.ratings_gen = gen;
+                                                }
+                                                Err(e) => state.status = e,
                                             }
                                             if state.favorites {
-                                                let resorted = presets::favorite_entries(
-                                                    factory,
-                                                    &state.user,
-                                                    &state.ratings,
-                                                );
-                                                state.selected = resorted
-                                                    .iter()
-                                                    .position(|(f, n)| {
-                                                        *f == factory_flag && n == &name
-                                                    })
-                                                    .unwrap_or(0);
+                                                state.fav_dirty = true;
                                             }
                                         }
                                     }
@@ -654,6 +682,31 @@ fn preset_browser(
             );
         });
     });
+}
+
+fn enter_favorites(state: &mut GuiState, factory: &[Preset]) {
+    state.favorites = true;
+    state.fav_order = Some(presets::favorite_entries(
+        factory,
+        &state.user,
+        &state.ratings,
+    ));
+    state.fav_dirty = false;
+    state.selected = 0;
+}
+
+fn refresh_favorites(state: &mut GuiState, factory: &[Preset]) {
+    let follow = state.fav_order.as_ref().and_then(|order| order.get(state.selected).cloned());
+    let order = presets::favorite_entries(factory, &state.user, &state.ratings);
+    state.selected = follow
+        .and_then(|(factory_flag, name)| {
+            order
+                .iter()
+                .position(|(f, n)| *f == factory_flag && n == &name)
+        })
+        .unwrap_or(0);
+    state.fav_order = Some(order);
+    state.fav_dirty = false;
 }
 
 fn amber_button(ui: &mut Ui, text: &str) -> egui::Response {
